@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}</style>
+<title>Personas sin sentencia en México</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: una columna de lectura; la gráfica a todo el ancho como lámina de un cuaderno estadístico, cifras clave en una franja debajo */
+:root {
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --ink: #141a24;
+  --ink-2: #4b5566;
+  --ink-3: #7c8697;
+  --rule: #dfe3ea;
+  --band: #eceff4;
+  --line: #1f4f8f;
+  --area: rgba(31, 79, 143, .12);
+  --signal: #b4451f;
+  --display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #10141b; --panel: #161c25; --ink: #eef1f6; --ink-2: #b3bccb; --ink-3: #8691a3;
+    --rule: #2a3340; --band: #1c2430; --line: #79a8ec; --area: rgba(121, 168, 236, .16); --signal: #f08a5d;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #10141b; --panel: #161c25; --ink: #eef1f6; --ink-2: #b3bccb; --ink-3: #8691a3;
+  --rule: #2a3340; --band: #1c2430; --line: #79a8ec; --area: rgba(121, 168, 236, .16); --signal: #f08a5d;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 400 15px/1.55 var(--body); }
+.wrap { max-width: 1080px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 56px; display: grid; gap: 28px; }
+header { display: grid; gap: 10px; max-width: 70ch; }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+h1 { font: 700 clamp(30px, 5vw, 46px)/1.05 var(--display); letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+h1 .n { color: var(--signal); font-variant-numeric: tabular-nums; }
+.lede { color: var(--ink-2); margin: 0; font-size: 16px; }
+.lamina { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 18px 18px 12px; display: grid; gap: 8px; min-width: 0; }
+.lamina-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; align-items: baseline; }
+.lamina-top h2 { font: 700 17px/1.2 var(--display); margin: 0; }
+.leyenda { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--ink-2); }
+.leyenda i { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--line); vertical-align: middle; margin-right: 6px; }
+.leyenda i.d { border-top-style: dashed; }
+#graf { position: relative; width: 100%; min-width: 0; }
+#graf svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { font-family: var(--mono); fill: var(--ink-3); font-size: 11px; }
+svg .sx { font-family: var(--display); font-weight: 500; fill: var(--ink-2); font-size: 12.5px; }
+svg .hito-n { font-family: var(--mono); font-weight: 500; fill: var(--panel); font-size: 10px; }
+#tip { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.12); padding: 10px 12px; font-size: 12.5px; min-width: 190px; display: grid; gap: 4px; }
+#tip .m { font: 700 13px/1.2 var(--display); }
+#tip .t { font: 500 20px/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+#tip dl { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; margin: 0; }
+#tip dt { color: var(--ink-2); }
+#tip dd { margin: 0; text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+#tip .f { color: var(--ink-3); font-size: 11.5px; }
+.cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+.cifra { background: var(--panel); padding: 16px; display: grid; gap: 4px; align-content: start; }
+.cifra .k { font: 500 11.5px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.cifra .v { font: 700 28px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.cifra .v.up { color: var(--signal); }
+.cifra .s { color: var(--ink-2); font-size: 13px; }
+.hitos { display: grid; gap: 10px; }
+.hitos h2, .notas h2 { font: 700 17px/1.2 var(--display); margin: 0; }
+.hitos ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 24px; }
+.hitos li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start; font-size: 14px; }
+.hitos li b { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--ink-2); color: var(--panel); font: 500 11px/1 var(--mono); }
+.hitos li span { color: var(--ink-2); }
+.hitos li strong { color: var(--ink); font-weight: 500; display: block; }
+.notas { display: grid; gap: 8px; max-width: 75ch; color: var(--ink-2); font-size: 13.5px; }
+.notas p { margin: 0; }
+.nota-tabla { margin: 10px 0 0; font-size: 12.5px; color: var(--ink-3); }
+details { border-top: 1px solid var(--rule); padding-top: 12px; }
+summary { cursor: pointer; font: 500 14px/1.3 var(--display); color: var(--ink); }
+summary:focus-visible { outline: 2px solid var(--line); outline-offset: 3px; }
+.tabla { overflow-x: auto; margin-top: 10px; }
+table { border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; min-width: 520px; width: 100%; }
+th, td { padding: 5px 10px; border-bottom: 1px solid var(--rule); text-align: right; }
+th:first-child, td:first-child { text-align: left; }
+th { font: 500 11.5px/1.2 var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); }
+td { font-family: var(--mono); }
+a { color: var(--line); }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Cuaderno Mensual de Información Estadística Penitenciaria Nacional · 2016–2026</div>
+    <h1><span class="n" id="h-total">121,337</span> personas presas sin sentencia</h1>
+    <p class="lede" id="lede">Personas privadas de la libertad en situación jurídica de <em>procesadas</em>, fuero común y federal sumados, al cierre de cada mes. La cifra más alta de la serie es la del último mes publicado.</p>
+  </header>
+
+  <section class="lamina" aria-labelledby="t-graf">
+    <div class="lamina-top">
+      <h2 id="t-graf">Población procesada total, mensual</h2>
+      <div class="leyenda">
+        <span><i></i>tabla por entidad del cuaderno del mes</span>
+        <span><i class="d"></i>tabla de 13 meses de un cuaderno posterior</span>
+      </div>
+    </div>
+    <div id="graf" role="img" aria-label="Gráfica de línea del total de personas procesadas por mes, de enero de 2016 a agosto de 2026"></div>
+  </section>
+
+  <section class="cifras" id="cifras" aria-label="Cifras clave"></section>
+
+  <section class="hitos">
+    <h2>Hitos marcados en la gráfica</h2>
+    <ol id="hitos"></ol>
+  </section>
+
+  <section class="notas">
+    <h2>Fuente y notas</h2>
+    <p>SSPC, Prevención y Reinserción Social: Cuaderno Mensual de Información Estadística Penitenciaria Nacional (PDF). Desde 2017 la cifra sale de la tabla por entidad del cuaderno de cada mes y está validada contra los totales impresos, la suma por centro y los datos abiertos de datos.gob.mx (2025–2026).</p>
+    <p>2016 y junio a agosto de 2019 vienen de la tabla de comportamiento de 13 meses de cuadernos posteriores. Los PDF de junio a agosto de 2019 se publicaron incompletos. El cuaderno de diciembre de 2017 revisó a la baja el fuero federal de enero a marzo de 2017; aquí se usa la cifra publicada en el cuaderno de cada mes.</p>
+    <p>Datos y código: <a href="https://github.com/jmtoral/cuadernos_penitenciarios" target="_blank" rel="noopener">github.com/jmtoral/cuadernos_penitenciarios</a></p>
+    <details>
+      <summary>Ver la serie completa en tabla</summary>
+      <p class="nota-tabla">* Mes tomado de la tabla de comportamiento de 13 meses de un cuaderno posterior: 2016 completo y junio a agosto de 2019. Es el mismo tramo que aparece punteado en la gráfica.</p>
+      <div class="tabla"><table id="tabla"><thead><tr><th>Mes</th><th>Fuero común</th><th>Fuero federal</th><th>Total sin sentencia</th><th>% de la población</th></tr></thead><tbody></tbody></table></div>
+    </details>
+  </section>
+</div>
+
+<script>
+const DATA = [["2016-01",78161,24092,247001,"t"],["2016-02",76954,23905,245479,"t"],["2016-03",75276,23845,244190,"t"],["2016-04",74264,23499,242279,"t"],["2016-05",73799,23211,240493,"t"],["2016-06",72963,22779,236886,"t"],["2016-07",70011,22358,233469,"t"],["2016-08",66223,22182,230519,"t"],["2016-09",64556,21807,226954,"t"],["2016-10",63421,21585,224372,"t"],["2016-11",62849,21368,221490,"t"],["2016-12",61622,20957,217868,"t"],["2017-01",62065,20641,216831,"e"],["2017-02",61163,20363,215135,"e"],["2017-03",60427,20254,213318,"e"],["2017-04",60219,19923,212031,"e"],["2017-05",59904,19966,210810,"e"],["2017-06",59931,19538,209782,"e"],["2017-07",60259,19263,209309,"e"],["2017-08",60507,18971,208689,"e"],["2017-09",61160,18626,208343,"e"],["2017-10",61493,18376,207432,"e"],["2017-11",61115,17965,206273,"e"],["2017-12",61350,17569,204617,"e"],["2018-01",62492,17396,205139,"e"],["2018-02",62797,17259,204749,"e"],["2018-03",63431,17011,204422,"e"],["2018-04",62969,16650,203847,"e"],["2018-05",63290,16370,203364,"e"],["2018-06",63040,16155,202889,"e"],["2018-07",62894,15829,202593,"e"],["2018-08",63512,15652,202745,"e"],["2018-09",61673,15651,202403,"e"],["2018-10",61180,15141,201538,"e"],["2018-11",61232,14629,199780,"e"],["2018-12",60653,14377,197988,"e"],["2019-01",61259,14212,198384,"e"],["2019-02",61213,14109,199030,"e"],["2019-03",61229,14308,198475,"e"],["2019-04",61818,13870,199749,"e"],["2019-05",63737,12650,200478,"e"],["2019-06",63684,13148,200753,"t"],["2019-07",64638,12610,201467,"t"],["2019-08",65636,12613,202297,"t"],["2019-09",65739,12512,202779,"e"],["2019-10",65722,12162,202221,"e"],["2019-11",65631,11994,201889,"e"],["2019-12",63843,11444,200936,"e"],["2020-01",64305,11339,202337,"e"],["2020-02",65219,11263,203393,"e"],["2020-03",65830,11400,205535,"e"],["2020-04",68756,11649,207890,"e"],["2020-05",71381,11708,209053,"e"],["2020-06",73629,11636,210287,"e"],["2020-07",75723,11651,211999,"e"],["2020-08",77266,11801,213493,"e"],["2020-09",78329,11969,214202,"e"],["2020-10",77951,12052,214776,"e"],["2020-11",77750,12064,215232,"e"],["2020-12",77181,11949,214231,"e"],["2021-01",78847,11997,216134,"e"],["2021-02",80770,12051,217969,"e"],["2021-03",81464,12323,219117,"e"],["2021-04",82189,12358,220114,"e"],["2021-05",82359,12544,220647,"e"],["2021-06",81597,12562,220393,"e"],["2021-07",81762,12682,220866,"e"],["2021-08",82356,12863,222018,"e"],["2021-09",82420,13004,222600,"e"],["2021-10",82607,13073,222959,"e"],["2021-11",80174,13081,223416,"e"],["2021-12",79510,13064,222369,"e"],["2022-01",80059,13254,223507,"e"],["2022-02",81218,13321,224864,"e"],["2022-03",79415,13321,225843,"e"],["2022-04",79718,13398,226111,"e"],["2022-05",79664,13524,226646,"e"],["2022-06",79260,13335,226916,"e"],["2022-07",79824,12971,228254,"e"],["2022-08",80109,13202,229621,"e"],["2022-09",79927,13009,229623,"e"],["2022-10",79735,13374,229965,"e"],["2022-11",79586,13306,230000,"e"],["2022-12",78558,13263,228530,"e"],["2023-01",79368,13247,230051,"e"],["2023-02",79624,13221,230730,"e"],["2023-03",79564,13262,231100,"e"],["2023-04",80352,13219,231907,"e"],["2023-05",80219,13265,232230,"e"],["2023-06",80120,13378,232807,"e"],["2023-07",80494,13434,234067,"e"],["2023-08",79376,13444,234561,"e"],["2023-09",78253,13261,234762,"e"],["2023-10",76854,13140,234323,"e"],["2023-11",76029,12962,233834,"e"],["2023-12",75222,12590,231905,"e"],["2024-01",75700,12372,232828,"e"],["2024-02",75564,12360,232683,"e"],["2024-03",76248,12110,232859,"e"],["2024-04",76172,11850,232729,"e"],["2024-05",75876,11571,232493,"e"],["2024-06",75098,11211,231952,"e"],["2024-07",75375,10888,232720,"e"],["2024-08",75945,10902,233687,"e"],["2024-09",75414,11115,234514,"e"],["2024-10",75608,11250,235461,"e"],["2024-11",76012,11296,236003,"e"],["2024-12",75276,11349,235197,"e"],["2025-01",77459,11778,238112,"e"],["2025-02",78956,12109,240212,"e"],["2025-03",80235,12373,242457,"e"],["2025-04",82154,12503,244448,"e"],["2025-05",83309,12798,246535,"e"],["2025-06",84740,12970,248361,"e"],["2025-07",86610,13314,250455,"e"],["2025-08",88415,13638,252466,"e"],["2025-09",90165,13826,254109,"e"],["2025-10",90996,13825,255190,"e"],["2025-11",92128,14166,256557,"e"],["2025-12",92293,14001,256127,"e"],["2026-01",94529,14242,259106,"e"],["2026-02",96246,14459,261388,"e"],["2026-03",97562,14684,263552,"e"],["2026-04",98965,15012,265874,"e"],["2026-05",100552,15540,268245,"e"],["2026-06",100365,15906,270158,"e"],["2026-07",102223,16043,272448,"e"],["2026-08",104845,16492,275497,"e"]]; // [periodo, comun, federal, poblacion_total, fuente e|t]
+const MESES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const MESES_L = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const SEXENIOS = [["Peña Nieto","2012-12","2018-11"],["López Obrador","2018-12","2024-09"],["Sheinbaum","2024-10","2030-09"]];
+const HITOS = [
+  ["2016-06","Sistema penal acusatorio en todo el país","Vence el plazo de ocho años de la reforma de 2008."],
+  ["2019-04","Se amplía la prisión preventiva oficiosa","Reforma al artículo 19 (DOF 12/04/2019). En marzo cerró el penal de Islas Marías."],
+  ["2020-04","Ley de Amnistía","DOF 22/04/2020; coincide con el inicio de la pandemia."],
+  ["2024-09","Reforma al Poder Judicial","DOF 15/09/2024: elección de personas juzgadoras."],
+  ["2024-12","Nueva ampliación de la prisión preventiva oficiosa","DOF 31/12/2024: extorsión, fentanilo, contrabando, facturas falsas."],
+  ["2025-09","Toman cargo los juzgadores electos","Primera elección judicial: 1 de junio de 2025."]
+];
+const fmt = n => n.toLocaleString("es-MX");
+const idx = p => { const [y, m] = p.split("-").map(Number); return y * 12 + m - 1; };
+const nombre = p => { const [y, m] = p.split("-").map(Number); return `${MESES_L[m - 1]} de ${y}`; };
+const corto = p => { const [y, m] = p.split("-").map(Number); return `${MESES[m - 1]} ${y}`; };
+const S = DATA.map(([p, c, f, pob, src]) => ({ p, i: idx(p), c, f, t: c + f, pob, src }));
+const byP = Object.fromEntries(S.map(d => [d.p, d]));
+const last = S[S.length - 1];
+
+// encabezado
+document.getElementById("h-total").textContent = fmt(last.t);
+
+// cifras clave
+const pct = (a, b) => ((b - a) / a * 100);
+const sgn = n => (n > 0 ? "+" : "−") + fmt(Math.abs(Math.round(n)));
+const sgnP = n => (n > 0 ? "+" : "−") + Math.abs(n).toFixed(1).replace(".", ",") + " %";
+const minD = S.reduce((a, b) => (b.t < a.t ? b : a));
+const amlo0 = byP["2018-12"], amlo1 = byP["2024-09"], sh0 = byP["2024-10"];
+const mesesSh = last.i - sh0.i;
+const cifras = [
+  ["Último mes", fmt(last.t), `${nombre(last.p)} · ${(last.t / last.pob * 100).toFixed(1).replace(".", ",")} % de toda la población penitenciaria`, true],
+  ["Con López Obrador", sgn(amlo1.t - amlo0.t), `${fmt(amlo0.t)} en dic 2018 → ${fmt(amlo1.t)} en sep 2024 (${sgnP(pct(amlo0.t, amlo1.t))}) en ${amlo1.i - amlo0.i} meses`],
+  ["Con Sheinbaum", sgn(last.t - sh0.t), `${fmt(sh0.t)} en oct 2024 → ${fmt(last.t)} en ${corto(last.p)} (${sgnP(pct(sh0.t, last.t))}) en ${mesesSh} meses`, true],
+  ["Punto más bajo", fmt(minD.t), `${nombre(minD.p)}, primer mes del sexenio de López Obrador`]
+];
+document.getElementById("cifras").innerHTML = cifras.map(([k, v, s, up]) =>
+  `<div class="cifra"><div class="k">${k}</div><div class="v${up ? " up" : ""}">${v}</div><div class="s">${s}</div></div>`).join("");
+
+// hitos (numerados en orden cronológico; el número es la marca en la gráfica)
+document.getElementById("hitos").innerHTML = HITOS.map(([p, t, s], k) =>
+  `<li><b>${k + 1}</b><span><strong>${t}</strong>${corto(p)} · ${s}</span></li>`).join("");
+
+// tabla
+document.querySelector("#tabla tbody").innerHTML = S.slice().reverse().map(d =>
+  `<tr><td>${corto(d.p)}${d.src === "t" ? " *" : ""}</td><td>${fmt(d.c)}</td><td>${fmt(d.f)}</td><td>${fmt(d.t)}</td><td>${(d.t / d.pob * 100).toFixed(1)}</td></tr>`).join("");
+
+// gráfica
+const box = document.getElementById("graf");
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+
+function dibujar() {
+  box.innerHTML = "";
+  const W = Math.max(320, box.clientWidth), estrecho = W < 600;
+  const H = estrecho ? 340 : 440;
+  const m = { t: 40, r: estrecho ? 14 : 92, b: 34, l: estrecho ? 40 : 52 };
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H }, box);
+  const i0 = S[0].i, i1 = last.i;
+  const x = i => m.l + (i - i0) / (i1 - i0) * (W - m.l - m.r);
+  const yMax = 140000;
+  const y = v => m.t + (1 - v / yMax) * (H - m.t - m.b);
+  const css = getComputedStyle(document.documentElement);
+  const c = n => css.getPropertyValue(n).trim();
+
+  // bandas de sexenio
+  SEXENIOS.forEach(([n, a, b], k) => {
+    const xa = x(Math.max(idx(a), i0)), xb = x(Math.min(idx(b) + 1, i1));
+    if (xb <= xa) return;
+    if (k % 2 === 1) el("rect", { x: xa, y: m.t, width: xb - xa, height: H - m.t - m.b, fill: c("--band") }, svg);
+    const t = el("text", { x: (xa + xb) / 2, y: m.t - 22, "text-anchor": "middle", class: "sx" }, svg);
+    t.textContent = estrecho && n === "López Obrador" ? "AMLO" : n;
+  });
+
+  // rejilla y eje y
+  for (let v = 0; v <= yMax; v += 20000) {
+    el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: c("--rule"), "stroke-width": v === 0 ? 1 : .6 }, svg);
+    const t = el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg);
+    t.textContent = v === 0 ? "0" : (v / 1000) + " mil";
+  }
+  // eje x: años
+  for (let a = 2016; a <= 2026; a++) {
+    const xi = x(idx(`${a}-01`));
+    if (estrecho && a % 2) continue;
+    el("line", { x1: xi, x2: xi, y1: H - m.b, y2: H - m.b + 5, stroke: c("--ink-3") }, svg);
+    const t = el("text", { x: xi, y: H - m.b + 19, "text-anchor": "middle" }, svg);
+    t.textContent = a;
+  }
+
+  // hitos
+  HITOS.forEach(([p], k) => {
+    const xi = x(idx(p));
+    el("line", { x1: xi, x2: xi, y1: m.t, y2: H - m.b, stroke: c("--ink-3"), "stroke-width": .8, "stroke-dasharray": "2 3" }, svg);
+    el("circle", { cx: xi, cy: m.t - 6, r: 8, fill: c("--ink-2") }, svg);
+    const t = el("text", { x: xi, y: m.t - 2.5, "text-anchor": "middle", class: "hito-n" }, svg);
+    t.textContent = k + 1;
+  });
+
+  // área y línea (punteada en tramos de la tabla de 13 meses)
+  const pts = S.map(d => [x(d.i), y(d.t)]);
+  el("path", { d: `M${pts[0][0]},${y(0)} ` + pts.map(q => `L${q[0]},${q[1]}`).join(" ") + ` L${pts[pts.length - 1][0]},${y(0)} Z`, fill: c("--area") }, svg);
+  for (let k = 1; k < S.length; k++) {
+    const t13 = S[k].src === "t" || S[k - 1].src === "t";
+    el("line", { x1: pts[k - 1][0], y1: pts[k - 1][1], x2: pts[k][0], y2: pts[k][1], stroke: c("--line"), "stroke-width": 2.2,
+      "stroke-linecap": "round", "stroke-dasharray": t13 ? "3 3" : "none" }, svg);
+  }
+
+  // etiquetas directas: mínimo y último
+  const marca = (d, txt, ancla, dx, dy, color) => {
+    el("circle", { cx: x(d.i), cy: y(d.t), r: 4.5, fill: color, stroke: c("--panel"), "stroke-width": 2 }, svg);
+    const t = el("text", { x: x(d.i) + dx, y: y(d.t) + dy, "text-anchor": ancla, style: `fill:${c("--ink")};font-size:12px` }, svg);
+    t.textContent = txt;
+  };
+  marca(minD, `${fmt(minD.t)} · ${corto(minD.p)}`, "middle", 0, 20, c("--line"));
+  if (estrecho) marca(last, fmt(last.t), "end", -8, -10, c("--signal"));
+  else marca(last, fmt(last.t), "start", 9, 4, c("--signal"));
+
+  // interacción: cruz + tooltip
+  const cruz = el("line", { y1: m.t, y2: H - m.b, stroke: c("--ink"), "stroke-width": 1, opacity: 0 }, svg);
+  const punto = el("circle", { r: 5, fill: c("--line"), stroke: c("--panel"), "stroke-width": 2, opacity: 0 }, svg);
+  const hit = el("rect", { x: m.l, y: 0, width: W - m.l - m.r, height: H, fill: "transparent" }, svg);
+  let tip = document.getElementById("tip");
+  if (!tip) { tip = document.createElement("div"); tip.id = "tip"; tip.hidden = true; box.appendChild(tip); } else box.appendChild(tip);
+  const mover = ev => {
+    const r = svg.getBoundingClientRect();
+    const px = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
+    const sx = px * W / r.width;
+    const i = Math.round(i0 + (sx - m.l) / (W - m.l - m.r) * (i1 - i0));
+    const d = S[Math.max(0, Math.min(S.length - 1, i - i0))];
+    const cx = x(d.i), cy = y(d.t);
+    cruz.setAttribute("x1", cx); cruz.setAttribute("x2", cx); cruz.setAttribute("opacity", .35);
+    punto.setAttribute("cx", cx); punto.setAttribute("cy", cy); punto.setAttribute("opacity", 1);
+    const prev = byP[S[Math.max(0, d.i - i0 - 12)].p];
+    const var12 = d.i - i0 >= 12 ? `${sgn(d.t - prev.t)} vs. un año antes` : "";
+    tip.innerHTML = `<div class="m">${nombre(d.p)}</div><div class="t">${fmt(d.t)}</div>
+      <dl><dt>Fuero común</dt><dd>${fmt(d.c)}</dd><dt>Fuero federal</dt><dd>${fmt(d.f)}</dd>
+      <dt>% de la población</dt><dd>${(d.t / d.pob * 100).toFixed(1)} %</dd></dl>
+      <div class="f">${var12}${var12 ? " · " : ""}${d.src === "t" ? "tabla de 13 meses" : "tabla por entidad"}</div>`;
+    tip.hidden = false;
+    const scale = r.width / W, tw = tip.offsetWidth, th = tip.offsetHeight;
+    let left = cx * scale + 14; if (left + tw > r.width) left = cx * scale - tw - 14;
+    let top = Math.max(0, cy * scale - th / 2); if (top + th > r.height) top = r.height - th;
+    tip.style.left = Math.max(0, left) + "px"; tip.style.top = top + "px";
+  };
+  const salir = () => { tip.hidden = true; cruz.setAttribute("opacity", 0); punto.setAttribute("opacity", 0); };
+  hit.addEventListener("mousemove", mover);
+  hit.addEventListener("touchstart", mover, { passive: true });
+  hit.addEventListener("touchmove", mover, { passive: true });
+  hit.addEventListener("mouseleave", salir);
+}
+dibujar();
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(dibujar, 120); });
+matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", dibujar);
+new MutationObserver(dibujar).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+</script>
+
+</body>
+</html>

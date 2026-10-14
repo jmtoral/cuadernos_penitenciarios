@@ -6,6 +6,8 @@ Base de datos mensual, reproducible y validada, construida a partir del **Cuader
 
 > Estado (2026‑10‑14): **fase 1 terminada**. 2017‑01 a 2026‑08 está extraído y validado: 113 de 116 meses. Faltan jun–ago 2019, cuyos PDFs publicados están incompletos. Ver [§14](#14-bitácora-de-la-fase-1). Las decisiones de diseño están en [§10](#10-registro-de-decisiones).
 
+**Gráfica interactiva:** <https://jmtoral.github.io/cuadernos_penitenciarios/> (personas sin sentencia, mensual, 2016–2026; fuente en `docs/index.html`).
+
 ![Personas procesadas por fuero](graficas/1_procesados_nacional.png)
 
 ---
@@ -26,6 +28,7 @@ Base de datos mensual, reproducible y validada, construida a partir del **Cuader
 12. [Trampas conocidas](#12-trampas-conocidas)
 13. [Glosario](#13-glosario)
 14. [Bitácora de la fase 1](#14-bitácora-de-la-fase-1)
+15. [Diferencias con los censos de INEGI](#15-diferencias-con-los-censos-de-inegi)
 
 ---
 
@@ -288,7 +291,7 @@ flowchart TD
 | `entidades_vs_nacional` | todos | 0 |
 | `nacional_vs_13m` | todos los meses que aparezcan en un cuaderno posterior | 0; las revisiones retroactivas se reportan aparte |
 | `pdf_vs_csv` | ene–jun 2025, ene–jun 2026 | 0 |
-| `inegi_anual` | cortes anuales | manual, solo de referencia (fecha de corte distinta) |
+| `inegi_anual` | cortes anuales | sin tolerancia: es otra fuente; las diferencias se reportan en [§15](#15-diferencias-con-los-censos-de-inegi) |
 
 ---
 
@@ -493,4 +496,45 @@ Para la base de Peña Nieto (dic‑2012 a nov‑2018) se necesitan las épocas A
 - Las demás revisiones retroactivas son de ±1 persona (2023‑2024).
 - **Centros federales sin armonizar:** en la gráfica 3, CEFERESO 3 muestra un pico improbable en 2017. Las sumas validan, así que es una etiqueta de centro mal asignada y no una cifra mala. Queda para la fase 4.
 - **Entorno en Windows:** correr con `conda activate cuaderno_pen`. Llamar al `python.exe` del entorno sin activarlo carga DLLs del Anaconda base y matplotlib se cae (código 0xc06d007f).
+
+---
+
+## 15. Diferencias con los censos de INEGI
+
+Los censos penitenciarios de INEGI y el Cuaderno de PRS son **fuentes distintas**: los registros administrativos que cada entidad reporta a dos instituciones diferentes, con conceptos que no son idénticos. Aquí no se busca que cuadren, sino documentar cuánto y por qué difieren. La comparación es contra el **cuaderno de diciembre** de cada año, porque INEGI reporta el cierre del año (31 de diciembre).
+
+**Fuentes INEGI:**
+- CNGSPSPE 2018–2020 y CNSIPEE/CNSIPEF 2021–2024, en la gráfica 2 del [boletín CNSIPEE‑F 2024](https://inegi.org.mx/contenidos/saladeprensa/boletines/2024/CNSIPEE-F/CNSIPEE-F2024.pdf).
+- CNSIPEF‑E 2026 (cierre 2024 y 2025), en la tabla 10 y la gráfica 8 del [reporte de resultados](https://www.inegi.org.mx/contenidos/saladeprensa/boletines/2026/cnispee/CNSIPEF-E2025_RR.pdf).
+
+### Población privada de la libertad total y en centros federales
+
+| Cierre | INEGI total | Cuaderno dic. | Diferencia | INEGI federal | Cuaderno federal | Dif. |
+|---|---|---|---|---|---|---|
+| 2017 | 201,903 | 204,617 | +2,714 (+1.3 %) | 19,904 | 19,899 | −5 |
+| 2018 | 196,322 | 197,988 | +1,666 (+0.8 %) | 17,916 | 17,916 | 0 |
+| 2019 | 198,805 | 200,936 | +2,131 (+1.1 %) | 17,271 | 17,271 | 0 |
+| 2020 | 211,154 | 214,231 | +3,077 (+1.5 %) | 16,328 | 16,328 | 0 |
+| 2021 | 220,419 | 222,369 | +1,950 (+0.9 %) | 16,060 | 16,060 | 0 |
+| 2022 | 226,077 | 228,530 | +2,453 (+1.1 %) | 18,976 | 18,976 | 0 |
+| 2023 | 233,277 | 231,905 | −1,372 (−0.6 %) | 20,852 | 20,851 | −1 |
+| 2024 | 236,773 | 235,197 | −1,576 (−0.7 %) | 20,702 | 20,702 | 0 |
+| 2025 | 231,436 | 256,127 | +24,691 (+10.7 %) | 20,411 | 20,411 | 0 |
+
+- **Centros federales:** las dos fuentes coinciden prácticamente exacto todos los años. Todo indica que INEGI toma la cifra federal del mismo registro de PRS.
+- **Centros estatales:** el Cuaderno trae entre 1,700 y 3,100 personas más que INEGI de 2017 a 2022, y entre 1,400 y 1,600 menos en 2023–2024. Esto pasa a pesar de que INEGI incluye además a los adolescentes en internamiento (1,274 en 2023 y 1,754 en 2025) y el Cuaderno no. Las causas probables son la fecha exacta de corte y la forma en que cada entidad responde a cada institución.
+- **2025:** INEGI no incluye a la población adulta de los centros de Ciudad de México, que no entregó esa información. Si se quita Ciudad de México del Cuaderno (26,609 personas), quedan 229,518 contra 229,682 adultos de INEGI: una diferencia de −164.
+
+### Personas sin sentencia
+
+INEGI publica la cifra sin sentencia con detalle a partir del cierre de 2023. Antes solo aparece como porcentaje en gráficas de boletines, sin cifras legibles.
+
+| Cierre | INEGI sin sentencia | Cuaderno procesadas (dic.) | Diferencia |
+|---|---|---|---|
+| 2023 | 86,984 (37.3 %) | 87,812 (37.9 %) | +828 |
+| 2024 | ≈ 85,950 (36.3 %, cifra calculada con el % publicado) | 86,625 (36.8 %) | ≈ +675 |
+| 2025 | 97,722 (42.2 %), sin adultos de Ciudad de México | 106,294; sin Ciudad de México, 98,332 | +610 sin Ciudad de México |
+
+- **Los conceptos no son iguales.** INEGI separa "sin sentencia", "sentencia no definitiva" y "sentencia definitiva". En 2023 hubo 17,202 personas con sentencia no definitiva, que INEGI cuenta del lado *con sentencia*. El Cuaderno solo distingue procesadas y sentenciadas. Aun así, las dos cifras de "sin sentencia" quedan a menos de 1 % de distancia, lo que sugiere que el Cuaderno también clasifica como sentenciada a quien tiene una sentencia no definitiva.
+- **Ciudad de México pesa en 2025.** El salto de INEGI de 36.3 % a 42.2 % entre 2024 y 2025 se da *sin* los adultos de Ciudad de México, que en el Cuaderno tienen una proporción de procesados (30 %) más baja que el promedio. La serie del Cuaderno no tiene ese hueco, así que es la mejor base para ver la tendencia nacional de 2025–2026.
 
