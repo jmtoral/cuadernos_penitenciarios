@@ -298,16 +298,17 @@ flowchart TD
 | **López Obrador** | **2018‑12** | **2024‑09** | **núcleo de la historia** |
 | Sheinbaum | 2024‑10 | en curso | continuidad |
 
-Hitos que se marcan **explícitamente** en las gráficas. Las fechas deben verificarse en el DOF antes de publicar.
+Hitos que se marcan **explícitamente** en las gráficas. Las publicaciones en el DOF se verificaron el 2026‑10‑14.
 
-| Fecha | Hito | Por qué importa |
-|---|---|---|
-| 2008‑06 | Reforma constitucional penal (sistema acusatorio) | inicia la transición |
-| **2016‑06** | **Sistema Penal Acusatorio vigente en todo el país** | **corte metodológico dentro del sexenio de Peña Nieto**: antes de esta fecha, buena parte de los procesados viene del sistema mixto. La comparación contra AMLO tiene que mostrarlo. |
-| 2019‑04 | Reforma al art. 19: se amplía el catálogo de prisión preventiva oficiosa | hipótesis central del aumento de procesados |
-| 2019 | Cierre del complejo Islas Marías | cambia el conjunto de CEFERESO |
-| 2020‑04 | Ley de Amnistía y COVID‑19 | posibles caídas o choques |
-| 2024‑12 | Nueva ampliación de la prisión preventiva oficiosa | relevante para el periodo de Sheinbaum |
+| Fecha | Hito | Fuente | Por qué importa |
+|---|---|---|---|
+| 2008‑06‑18 | Reforma constitucional en seguridad y justicia penal (sistema acusatorio) | [DOF 5046978](https://dof.gob.mx/nota_detalle.php?codigo=5046978&fecha=18/06/2008) | inicia la transición; el transitorio 2.º da un plazo de 8 años |
+| **2016‑06‑18** | **Vence el plazo: Sistema Penal Acusatorio vigente en todo el país** | transitorio 2.º del decreto de 2008 y el CNPP ([DOF 05/03/2014](https://dof.gob.mx/nota_detalle.php?codigo=5334903&fecha=05/03/2014)) | **corte metodológico dentro del sexenio de Peña Nieto**: antes de esta fecha, buena parte de los procesados viene del sistema mixto. La comparación contra AMLO tiene que mostrarlo. |
+| 2019‑03 | Cierre del complejo penitenciario Islas Marías (traslados del 8 al 9 de marzo) | anuncio presidencial y prensa; no es una reforma publicada en el DOF | cambia el conjunto de CEFERESO |
+| 2019‑04‑12 | Reforma al art. 19: se amplía el catálogo de prisión preventiva oficiosa | [DOF 5557700](https://dof.gob.mx/nota_detalle.php?codigo=5557700&fecha=12/04/2019) | hipótesis central del aumento de procesados |
+| 2020‑04‑22 | Ley de Amnistía (y COVID‑19 en el mismo periodo) | [DOF 5592105](https://dof.gob.mx/nota_detalle.php?codigo=5592105&fecha=22/04/2020) | posibles caídas o choques |
+| 2024‑09‑15 | Reforma al Poder Judicial: elección de personas juzgadoras | [DOF 5738985](https://dof.gob.mx/nota_detalle.php?codigo=5738985&fecha=15/09/2024) (edición vespertina) | cambia a los jueces que resuelven los procesos. La primera elección judicial fue el 2025‑06‑01 y las personas electas asumieron el cargo el 2025‑09‑01; también se marcan esas dos fechas |
+| 2024‑12‑31 | Nueva ampliación de la prisión preventiva oficiosa (extorsión, fentanilo y drogas sintéticas, contrabando, facturas falsas) | [DOF 5746525](https://dof.gob.mx/nota_detalle.php?codigo=5746525&fecha=31/12/2024) (edición vespertina) | relevante para el periodo de Sheinbaum |
 
 ---
 
