@@ -32,6 +32,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 body { background: var(--bg); color: var(--ink); font: 400 15px/1.55 var(--body); }
 .wrap { max-width: 1080px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 56px; display: grid; gap: 28px; }
 header { display: grid; gap: 10px; max-width: 70ch; }
@@ -219,12 +220,12 @@ document.getElementById("h-total").textContent = fmt(last.t);
 // cifras clave
 const pct = (a, b) => ((b - a) / a * 100);
 const sgn = n => (n > 0 ? "+" : "−") + fmt(Math.abs(Math.round(n)));
-const sgnP = n => (n > 0 ? "+" : "−") + Math.abs(n).toFixed(1).replace(".", ",") + " %";
+const sgnP = n => (n > 0 ? "+" : "−") + Math.abs(n).toFixed(1) + " %";
 const minD = S.reduce((a, b) => (b.t < a.t ? b : a));
 const amlo0 = byP["2018-12"], amlo1 = byP["2024-09"], sh0 = byP["2024-10"];
 const mesesSh = last.i - sh0.i;
 const cifras = [
-  ["Último mes", fmt(last.t), `${nombre(last.p)} · ${(last.t / last.pob * 100).toFixed(1).replace(".", ",")} % de toda la población penitenciaria`, true],
+  ["Último mes", fmt(last.t), `${nombre(last.p)} · ${(last.t / last.pob * 100).toFixed(1)} % de toda la población penitenciaria`, true],
   ["Con López Obrador", sgn(amlo1.t - amlo0.t), `${fmt(amlo0.t)} en dic 2018 → ${fmt(amlo1.t)} en sep 2024 (${sgnP(pct(amlo0.t, amlo1.t))}) en ${amlo1.i - amlo0.i} meses`],
   ["Con Sheinbaum", sgn(last.t - sh0.t), `${fmt(sh0.t)} en oct 2024 → ${fmt(last.t)} en ${corto(last.p)} (${sgnP(pct(sh0.t, last.t))}) en ${mesesSh} meses`, true],
   ["Punto más bajo", fmt(minD.t), `${nombre(minD.p)}, primer mes del sexenio de López Obrador`]
@@ -270,7 +271,7 @@ addEventListener("touchend", () => setTimeout(ocultarTodo, 1800), { passive: tru
 
 // variación anual: cada mes contra el mismo mes del año anterior (la serie es mensual y continua)
 S.forEach((d, k) => { d.ant = k >= 12 ? S[k - 12] : null; d.v = d.ant ? (d.t - d.ant.t) / d.ant.t * 100 : null; });
-const pctFmt = v => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1).replace(".", ",") + " %";
+const pctFmt = v => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1) + " %";
 let modo = "nivel";
 document.querySelectorAll(".modo button").forEach(b => b.addEventListener("click", () => {
   modo = b.dataset.modo;
