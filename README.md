@@ -4,7 +4,9 @@ Base de datos mensual, reproducible y validada, construida a partir del **Cuader
 
 **Pregunta central.** ¿Cómo ha evolucionado el número de **personas procesadas, es decir, privadas de la libertad sin sentencia**? Primero se mira el sexenio de López Obrador comparado con el de Peña Nieto; después, el resto de la historia disponible (2006 a la fecha y, más adelante, desde 2000).
 
-> Estado: **diseño acordado y nada implementado todavía**. Este README es la especificación. Las decisiones están en [§10](#10-registro-de-decisiones).
+> Estado (2026‑10‑14): **fase 1 terminada**. 2017‑01 a 2026‑08 está extraído y validado: 113 de 116 meses. Faltan jun–ago 2019, cuyos PDFs publicados están incompletos. Ver [§14](#14-bitácora-de-la-fase-1). Las decisiones de diseño están en [§10](#10-registro-de-decisiones).
+
+![Personas procesadas por fuero](graficas/1_procesados_nacional.png)
 
 ---
 
@@ -23,6 +25,7 @@ Base de datos mensual, reproducible y validada, construida a partir del **Cuader
 11. [Hoja de ruta](#11-hoja-de-ruta)
 12. [Trampas conocidas](#12-trampas-conocidas)
 13. [Glosario](#13-glosario)
+14. [Bitácora de la fase 1](#14-bitácora-de-la-fase-1)
 
 ---
 
@@ -47,7 +50,7 @@ flowchart LR
 - Página índice: <https://www.gob.mx/prevencionyreinsercion/documentos/cuaderno-mensual-de-informacion-estadistica-penitenciaria-nacional-359620?idiom=es>
 - La página índice enlaza una página por año o grupo de años: `…/cuaderno-mensual-de-informacion-estadistica-penitenciaria-nacional-{2026,2025,2024,2023,2017-2019,2015-2016,2013-2014,2012,…,2000}`. La página **sin sufijo** corresponde a 2020‑2022.
 - Los archivos viven en `https://www.gob.mx/cms/uploads/attachment/file/<id>/<nombre>.pdf`. Los `<id>` **no son secuenciales**, así que hay que obtener los enlaces de cada página anual.
-- Basta `curl` con un User‑Agent de navegador.
+- **Desde oct‑2026 las páginas HTML tienen un desafío anti‑bots**, así que no se pueden raspar con `curl`. Las 320 ligas se tomaron desde el navegador y viven en `data/enlaces.csv`. Los PDFs sí bajan con `curl` y un User‑Agent de navegador.
 - Nombres irregulares que el descargador tiene que aceptar: `2000_01_CE.pdf` (2000‑2005), `CE_YYYY_MM.pdf`, `CE_2020_ENERO.pdf`, `CE_2020_SEPT.pdf`, `CE_10_2021.pdf`, `CE_12_2019.pdf`, `CUADERNO_ESTAD_STICO_SEPTIEMBRE_2025.pdf` y extensión `.PDF` (2007‑2008). **El periodo se toma de la página y del texto del PDF, no del nombre del archivo.**
 - **Hueco conocido: dic‑2003.** La página de 2003 enlaza por error `CE_2023_12.pdf` (file id 902713).
 
@@ -328,15 +331,18 @@ Se hacen en un notebook con matplotlib. Cuando la historia esté armada se pasa 
 cuaderno_pen/
 ├── README.md
 ├── .gitignore              # excluye data/raw/
-├── descargar.py            # páginas anuales → PDFs + manifiesto
-├── extraer.py              # PDFs → poblacion/capacidad/nacional_13m (un parser por época)
-├── ckan.py                 # datastore_search → data/raw/ckan/
-├── validar.py              # chequeos de §6 → validacion.csv
+├── descargar.py            # data/enlaces.csv → PDFs + manifiesto
+├── extraer.py              # PDFs → poblacion/capacidad/nacional_13m/impresos (época C, 2017+)
+├── ckan.py                 # datastore_search → data/raw/ckan/<AAAA-MM>/
+├── validar.py              # chequeos de §6 → validacion.csv + reporte_validacion.md
 ├── notebooks/
-│   └── exploracion.ipynb
+│   ├── exploracion.py      # fuente (celdas # %%)
+│   └── exploracion.ipynb   # versión ejecutada
+├── graficas/               # PNG de las gráficas tempranas
 └── data/
-    ├── raw/                # NO versionado (~1 GB de PDFs)
-    │   ├── pdf/
+    ├── enlaces.csv         # versionado: periodo → URL de cada PDF (320 ligas)
+    ├── raw/                # NO versionado (~1.1 GB de PDFs)
+    │   ├── pdf/            # CE_AAAA-MM.pdf
     │   ├── ckan/
     │   ├── muestras/       # 12 PDFs de muestra + .txt (de exploración)
     │   └── manifiesto.csv
@@ -344,10 +350,19 @@ cuaderno_pen/
         ├── poblacion.csv
         ├── capacidad.csv
         ├── nacional_13m.csv
-        └── validacion.csv
+        ├── impresos.csv    # subtotales/totales impresos, solo para validar
+        ├── errores.csv     # meses que el extractor no pudo leer
+        ├── validacion.csv
+        └── reporte_validacion.md
 ```
 
-Los scripts se crean al implementarse. No se crean archivos ni carpetas vacíos por adelantado.
+**Correr todo:**
+
+```bash
+conda activate cuaderno_pen && python descargar.py && python ckan.py && python extraer.py 2017-01 && python validar.py && python notebooks/exploracion.py
+```
+
+**Mes nuevo:** agregar su renglón a `data/enlaces.csv` (periodo, URL del PDF) y volver a correr la cadena. Las páginas HTML de gob.mx tienen un desafío anti‑bots, así que las ligas se toman a mano desde el navegador. Los PDFs sí bajan directo.
 
 **Entorno:** se crea un conda env propio, `cuaderno_pen`, con `pdfplumber`, `pandas`, `matplotlib`, `requests` y `jupyter`. No se reutiliza `votaciones_corte`, para no romper otro proyecto. `pdftotext` (mingw) ya está instalado.
 
@@ -408,6 +423,12 @@ Para la base de Peña Nieto (dic‑2012 a nov‑2018) se necesitan las épocas A
 - **Unidades en los CSV.** `sobrepoblacion_relativa` viene como fracción en 2025 y como % en 2026. Los `_prct` son strings en 2025.
 - **Recurso mal titulado.** En 2026, `fue_sjur_sex_ent` aparece titulado como "ingresos y egresos".
 - **Revisiones retroactivas.** La tabla de 13 meses puede corregir meses anteriores. Las diferencias se reportan, no se "arreglan".
+- **Variantes dentro de la época C:**
+  - 2017‑2019: la tabla por centro no trae la columna de % del fuero común, y los centros federales aparecen sin renglón de grupo.
+  - 2020‑2022: la tabla por entidad no trae renglón "Subtotal" antes de los CEFERESO, y agrega "Total del mes de <mes anterior>".
+
+  El extractor acepta las dos variantes de columnas y reconoce a los centros federales por su nombre (`CEFERESO`, `CEFEREPSI`, `Centro Penitenciario Federal`, `CPS`…).
+- **Pie de página.** El número de página comparte renglón con "Elaborado por…", así que se descartan los renglones de pie (Fuente, Nota, Elaborado).
 - **Hueco de dic‑2003** (época 0, no afecta a las fases 1‑4).
 - **Conjunto de CEFERESO cambiante.** Hubo cierres (Islas Marías, entre otros) y aperturas de CPS privados desde ~2012. Por eso `centro_raw` va sin armonizar.
 
@@ -426,3 +447,50 @@ Para la base de Peña Nieto (dic‑2012 a nov‑2018) se necesitan las épocas A
 | PPO | prisión preventiva oficiosa (art. 19 constitucional) |
 | SJPA / SPA | sistema de justicia penal acusatorio |
 | PRS | Prevención y Readaptación Social (órgano de la SSPC que publica el cuaderno) |
+
+---
+
+## 14. Bitácora de la fase 1
+
+**Fecha:** 2026‑10‑14. **Duración total:** ~3 h 10 min de trabajo continuo, de las ~11:15 (ligas y descarga) a las ~14:25 (validación limpia y notebook).
+
+| Etapa | Tiempo aprox. |
+|---|---|
+| Ligas de las 21 páginas anuales (con navegador, por el desafío anti‑bots) | 5 min |
+| Descarga de 319 PDFs (1.1 GB) | 4 min |
+| CSV de datos abiertos, 12 meses × 4 tablas (`ckan.py`) | 2 min |
+| Extractor: primera versión y pruebas con 3 muestras (2019, 2022, 2026) | 30 min |
+| Corridas completas de 2017‑2026 y correcciones entre una y otra | ~2 h 15 min |
+| Validación, gráficas, notebook, README | 15 min |
+
+**Corridas completas del extractor sobre 2017‑2026:** 7 (5 terminadas y 2 interrumpidas a propósito para meter una corrección). Cada corrida tarda 25–35 min.
+
+| # | Resultado | Qué se corrigió después |
+|---|---|---|
+| 1 | 52 de 116 meses con error | se tomaba la página del **índice** como tabla; el límite etiqueta/cifras era fijo; ene–jun 2017 trae % tras cada subtotal (22 col.); 2020‑2021 parten la tabla por entidad en 2 páginas con columnas distintas |
+| 2 | interrumpida | ene–jun 2017: excluir páginas "por lugar de origen" de cada CEFERESO |
+| 3 | interrumpida | cifras sueltas o de notas al pie creaban columnas falsas: grupos de < 5 % de los renglones no cuentan como columna |
+| 4 | 24 meses con error de extracción y 66 con algún chequeo fallido | tabla de 13 meses: renglón "Incremento" de más o mes del cuaderno de menos, y ahora no aborta el mes; variante 2021 con % solo tras procesadas (18 col.); sangría relativa para renglones de grupo; validador: nombres largos/cortos de entidad y CSV con *mojibake* |
+| 5 | 3 errores y 17 meses con falla | renglones de cifras sin etiqueta (nombre de centro partido arriba y abajo); total ilegible (2017‑04) o no impreso (2022‑04) en el validador |
+| 6 | 3 errores y 2 meses con falla | 2021‑02 sin columna TOTAL en la tabla por centro (se elige la variante según dónde caen los "%"); entidades centradas: grupo = nombre de estado; "CENTRO PENITENCIARIO FEDERAL" en singular (2017); nombres de centro que rebasan el límite ("…San Miguel de Allende") |
+| 7 | **3 errores (PDFs incompletos) y 0 fallas** | — |
+
+**Resultado final** (`data/processed/reporte_validacion.md`):
+
+| chequeo | meses ok | meses con falla |
+|---|---|---|
+| suma_sexo | 113 | 0 |
+| entidades_vs_nacional | 113 | 0 |
+| centros_vs_entidad | 113 | 0 |
+| nacional_vs_13m | 113 | 0 |
+| pdf_vs_csv (celda a celda, entidad y centro) | 12 | 0 |
+| extraccion | — | 3 (2019‑06, 2019‑07, 2019‑08: PDFs de 1–2 páginas) |
+
+**Hallazgos y pendientes:**
+
+- **Jun–ago 2019** no tienen tablas en el PDF publicado. A nivel nacional se cubren con la tabla de 13 meses de cuadernos posteriores (así lo hace la gráfica 1); a nivel entidad y centro quedan vacíos. Hay que buscar si PRS los publicó en otro lado.
+- **Revisión retroactiva rara en el cuaderno de dic‑2017.** Su tabla de 13 meses reporta para ene–mar 2017 un fuero federal de ~9 mil procesados, contra ~20 mil en los cuadernos de esos meses. Parece un cambio de criterio (¿qué cuenta como "federal"?) y hay que investigarlo antes de comparar 2017 con años posteriores.
+- Las demás revisiones retroactivas son de ±1 persona (2023‑2024).
+- **Centros federales sin armonizar:** en la gráfica 3, CEFERESO 3 muestra un pico improbable en 2017. Las sumas validan, así que es una etiqueta de centro mal asignada y no una cifra mala. Queda para la fase 4.
+- **Entorno en Windows:** correr con `conda activate cuaderno_pen`. Llamar al `python.exe` del entorno sin activarlo carga DLLs del Anaconda base y matplotlib se cae (código 0xc06d007f).
+
