@@ -123,9 +123,15 @@ a { color: var(--line); }
       <div class="modo" role="group" aria-label="Vista de la gráfica">
         <button type="button" id="modo-nivel" data-modo="nivel" aria-pressed="true">Personas</button>
         <button type="button" id="modo-var" data-modo="var" aria-pressed="false">Variación anual</button>
+        <button type="button" id="modo-sit" data-modo="sit" aria-pressed="false">Procesados vs. sentenciados</button>
       </div>
     </div>
     <div class="lamina-top">
+      <div class="leyenda" id="ley-sit" hidden>
+        <span><i></i>procesadas (sin sentencia)</span>
+        <span><i class="e"></i>sentenciadas</span>
+        <span>fuero común y federal sumados</span>
+      </div>
       <div class="leyenda" id="ley-var" hidden>
         <span><i class="sube"></i>más personas sin sentencia que un año antes</span>
         <span><i class="baja"></i>menos que un año antes</span>
@@ -270,24 +276,27 @@ document.querySelectorAll(".modo button").forEach(b => b.addEventListener("click
   modo = b.dataset.modo;
   document.querySelectorAll(".modo button").forEach(o => o.setAttribute("aria-pressed", String(o === b)));
   document.getElementById("ley-var").hidden = modo !== "var";
-  document.getElementById("ley-nivel").hidden = modo === "var";
-  document.getElementById("t-graf").textContent = modo === "var" ? "Variación anual de la población procesada" : "Población procesada total, mensual";
+  document.getElementById("ley-sit").hidden = modo !== "sit";
+  document.getElementById("ley-nivel").hidden = modo !== "nivel";
+  document.getElementById("t-graf").textContent = { nivel: "Población procesada total, mensual",
+    var: "Variación anual de la población procesada", sit: "Personas procesadas y sentenciadas, mensual" }[modo];
   dibujar();
 }));
 
 function dibujar() {
   box.innerHTML = "";
-  const VAR = modo === "var";
+  const VAR = modo === "var", SIT = modo === "sit";
   const W = Math.max(320, box.clientWidth), estrecho = W < 600;
   const H = estrecho ? 340 : 440;
   const m = { t: 40, r: estrecho ? 14 : 92, b: 34, l: estrecho ? 40 : 52 };
   const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H }, box);
   const i0 = S[0].i, i1 = last.i;
   const x = i => m.l + (i - i0) / (i1 - i0) * (W - m.l - m.r);
-  const yMax = 140000;
+  const yMax = SIT ? 180000 : 140000;
   const lim = Math.ceil(Math.max(...S.filter(d => d.v !== null).map(d => Math.abs(d.v))) / 5) * 5;
   const y = VAR ? v => m.t + (lim - v) / (2 * lim) * (H - m.t - m.b) : v => m.t + (1 - v / yMax) * (H - m.t - m.b);
   const val = d => VAR ? d.v : d.t;
+  const sent = d => d.pob - d.t;
   const css = getComputedStyle(document.documentElement);
   const c = n => css.getPropertyValue(n).trim();
 
@@ -338,6 +347,27 @@ function dibujar() {
     const tl = el("text", estrecho ? { x: x(last.i) - 4, y: y(last.v) - 8, "text-anchor": "end", style: `fill:${c("--ink")};font-size:12px` }
       : { x: x(last.i) + 8, y: y(last.v) + 4, "text-anchor": "start", style: `fill:${c("--ink")};font-size:12px` }, svg);
     tl.textContent = pctFmt(last.v);
+  } else if (SIT) {
+    const linea = (f, col) => {
+      for (let k = 1; k < S.length; k++) {
+        const t13 = S[k].src === "t" || S[k - 1].src === "t";
+        el("line", { x1: x(S[k - 1].i), y1: y(f(S[k - 1])), x2: x(S[k].i), y2: y(f(S[k])), stroke: col, "stroke-width": 2.2,
+          "stroke-linecap": "round", "stroke-dasharray": t13 ? "3 3" : "none" }, svg);
+      }
+    };
+    linea(sent, c("--ink-3"));
+    linea(d => d.t, c("--line"));
+    const cruce = S.find((d, k) => k && (d.t - sent(d)) * (S[k - 1].t - sent(S[k - 1])) < 0);
+    [[sent(last), c("--ink-3"), `${fmt(sent(last))} sentenciadas`], [last.t, c("--line"), `${fmt(last.t)} procesadas`]].forEach(([v, col, txt], k) => {
+      el("circle", { cx: x(last.i), cy: y(v), r: 4.5, fill: col, stroke: c("--panel"), "stroke-width": 2 }, svg);
+      const tl = el("text", estrecho ? { x: x(last.i) - 8, y: y(v) + (k ? 16 : -10), "text-anchor": "end", style: `fill:${c("--ink")};font-size:12px` }
+        : { x: x(last.i) + 9, y: y(v) + 4, style: `fill:${c("--ink")};font-size:12px` }, svg);
+      tl.textContent = estrecho ? fmt(v) : txt.split(" ")[0];
+    });
+    if (cruce) {
+      const tc = el("text", { x: x(cruce.i), y: y(cruce.t) - 12, "text-anchor": "middle", style: `fill:${c("--ink")};font-size:11.5px` }, svg);
+      tc.textContent = `se cruzan: ${corto(cruce.p)}`;
+    }
   } else {
   const pts = S.map(d => [x(d.i), y(d.t)]);
   el("path", { d: `M${pts[0][0]},${y(0)} ` + pts.map(q => `L${q[0]},${q[1]}`).join(" ") + ` L${pts[pts.length - 1][0]},${y(0)} Z`, fill: c("--area") }, svg);
@@ -376,7 +406,11 @@ function dibujar() {
     punto.setAttribute("cx", cx); punto.setAttribute("cy", cy); punto.setAttribute("opacity", 1);
     const prev = byP[S[Math.max(0, d.i - i0 - 12)].p];
     const var12 = d.i - i0 >= 12 ? `${sgn(d.t - prev.t)} vs. un año antes` : "";
-    if (VAR) tip.innerHTML = `<div class="m">${nombre(d.p)}</div><div class="t">${pctFmt(d.v)}</div>
+    if (SIT) tip.innerHTML = `<div class="m">${nombre(d.p)}</div>
+      <dl><dt>Procesadas</dt><dd>${fmt(d.t)}</dd><dt>Sentenciadas</dt><dd>${fmt(sent(d))}</dd>
+      <dt>% sin sentencia</dt><dd>${(d.t / d.pob * 100).toFixed(1)} %</dd><dt>Población total</dt><dd>${fmt(d.pob)}</dd></dl>
+      <div class="f">${d.src === "t" ? "tabla de 13 meses" : "tabla por entidad"}</div>`;
+    else if (VAR) tip.innerHTML = `<div class="m">${nombre(d.p)}</div><div class="t">${pctFmt(d.v)}</div>
       <div class="f">contra ${nombre(d.ant.p)}</div>
       <dl><dt>Sin sentencia</dt><dd>${fmt(d.t)}</dd><dt>Un año antes</dt><dd>${fmt(d.ant.t)}</dd>
       <dt>Diferencia</dt><dd>${sgn(d.t - d.ant.t)}</dd></dl>
