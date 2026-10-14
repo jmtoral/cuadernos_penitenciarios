@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>body{margin:0}</style>
+<title>Personas sin sentencia en México</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@500;700&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: una columna de lectura; la gráfica a todo el ancho como lámina de un cuaderno estadístico, cifras clave en una franja debajo */
+:root {
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --ink: #141a24;
+  --ink-2: #4b5566;
+  --ink-3: #7c8697;
+  --rule: #dfe3ea;
+  --band: #eceff4;
+  --line: #1f4f8f;
+  --area: rgba(31, 79, 143, .12);
+  --signal: #b4451f;
+  --signal-area: rgba(180, 69, 31, .16);
+  --display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #10141b; --panel: #161c25; --ink: #eef1f6; --ink-2: #b3bccb; --ink-3: #8691a3;
+    --rule: #2a3340; --band: #1c2430; --line: #79a8ec; --area: rgba(121, 168, 236, .16); --signal: #f08a5d; --signal-area: rgba(240, 138, 93, .2);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #10141b; --panel: #161c25; --ink: #eef1f6; --ink-2: #b3bccb; --ink-3: #8691a3;
+  --rule: #2a3340; --band: #1c2430; --line: #79a8ec; --area: rgba(121, 168, 236, .16); --signal: #f08a5d; --signal-area: rgba(240, 138, 93, .2);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 400 15px/1.55 var(--body); }
+.wrap { max-width: 1080px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 56px; display: grid; gap: 28px; }
+header { display: grid; gap: 10px; max-width: 70ch; }
+.eyebrow { font: 500 12px/1 var(--mono); letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+h1 { font: 700 clamp(30px, 5vw, 46px)/1.05 var(--display); letter-spacing: -.01em; margin: 0; text-wrap: balance; }
+h1 .n { color: var(--signal); font-variant-numeric: tabular-nums; }
+.lede { color: var(--ink-2); margin: 0; font-size: 16px; }
+.lamina { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 18px 18px 12px; display: grid; gap: 8px; min-width: 0; }
+.lamina-top { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 16px; align-items: baseline; }
+.lamina-top h2 { font: 700 17px/1.2 var(--display); margin: 0; }
+.leyenda { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12.5px; color: var(--ink-2); }
+.leyenda i { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--line); vertical-align: middle; margin-right: 6px; }
+.leyenda i.d { border-top-style: dashed; }
+.leyenda i.p { border-top-color: var(--signal); }
+.leyenda i.e { border-top-color: var(--ink-3); }
+.leyenda i.a { height: 10px; border: 0; background: var(--signal-area); }
+.lamina-nota { margin: 0; color: var(--ink-2); font-size: 13.5px; max-width: 80ch; }
+.lamina-nota strong { color: var(--ink); font-weight: 500; }
+#graf, #graf2 { position: relative; width: 100%; min-width: 0; }
+#graf svg, #graf2 svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { font-family: var(--mono); fill: var(--ink-3); font-size: 11px; }
+svg .sx { font-family: var(--display); font-weight: 500; fill: var(--ink-2); font-size: 12.5px; }
+svg .hito-n { font-family: var(--mono); font-weight: 500; fill: var(--panel); font-size: 10px; }
+#tip, #tip2 { position: absolute; pointer-events: none; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(0,0,0,.12); padding: 10px 12px; font-size: 12.5px; min-width: 190px; display: grid; gap: 4px; }
+#tip .m, #tip2 .m { font: 700 13px/1.2 var(--display); }
+#tip .t, #tip2 .t { font: 500 20px/1.1 var(--mono); font-variant-numeric: tabular-nums; }
+#tip dl, #tip2 dl { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; margin: 0; }
+#tip dt, #tip2 dt { color: var(--ink-2); }
+#tip dd, #tip2 dd { margin: 0; text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+#tip .f, #tip2 .f { color: var(--ink-3); font-size: 11.5px; }
+.cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+.cifra { background: var(--panel); padding: 16px; display: grid; gap: 4px; align-content: start; }
+.cifra .k { font: 500 11.5px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.cifra .v { font: 700 28px/1.1 var(--display); font-variant-numeric: tabular-nums; }
+.cifra .v.up { color: var(--signal); }
+.cifra .s { color: var(--ink-2); font-size: 13px; }
+.hitos { display: grid; gap: 10px; }
+.hitos h2, .notas h2 { font: 700 17px/1.2 var(--display); margin: 0; }
+.hitos ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 24px; }
+.hitos li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start; font-size: 14px; }
+.hitos li b { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--ink-2); color: var(--panel); font: 500 11px/1 var(--mono); }
+.hitos li span { color: var(--ink-2); }
+.hitos li strong { color: var(--ink); font-weight: 500; display: block; }
+.notas { display: grid; gap: 8px; max-width: 75ch; color: var(--ink-2); font-size: 13.5px; }
+.notas p { margin: 0; }
+.nota-tabla { margin: 10px 0 0; font-size: 12.5px; color: var(--ink-3); }
+details { border-top: 1px solid var(--rule); padding-top: 12px; }
+summary { cursor: pointer; font: 500 14px/1.3 var(--display); color: var(--ink); }
+summary:focus-visible { outline: 2px solid var(--line); outline-offset: 3px; }
+.tabla { overflow-x: auto; margin-top: 10px; }
+table { border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; min-width: 520px; width: 100%; }
+th, td { padding: 5px 10px; border-bottom: 1px solid var(--rule); text-align: right; }
+th:first-child, td:first-child { text-align: left; }
+th { font: 500 11.5px/1.2 var(--mono); text-transform: uppercase; letter-spacing: .05em; color: var(--ink-3); }
+td { font-family: var(--mono); }
+a { color: var(--line); }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Cuaderno Mensual de Información Estadística Penitenciaria Nacional · 2016–2026</div>
+    <h1><span class="n" id="h-total">121,337</span> personas presas sin sentencia</h1>
+    <p class="lede" id="lede">Personas privadas de la libertad en situación jurídica de <em>procesadas</em>, fuero común y federal sumados, al cierre de cada mes. La cifra más alta de la serie es la del último mes publicado.</p>
+  </header>
+
+  <section class="lamina" aria-labelledby="t-graf">
+    <div class="lamina-top">
+      <h2 id="t-graf">Población procesada total, mensual</h2>
+      <div class="leyenda">
+        <span><i></i>tabla por entidad del cuaderno del mes</span>
+        <span><i class="d"></i>tabla de 13 meses de un cuaderno posterior</span>
+      </div>
+    </div>
+    <div id="graf" role="img" aria-label="Gráfica de línea del total de personas procesadas por mes, de enero de 2016 a agosto de 2026"></div>
+  </section>
+
+  <section class="cifras" id="cifras" aria-label="Cifras clave"></section>
+
+  <section class="lamina" aria-labelledby="t-sobre">
+    <div class="lamina-top">
+      <h2 id="t-sobre">Sobrepoblación: población total frente a espacios</h2>
+      <div class="leyenda">
+        <span><i class="p"></i>población privada de la libertad</span>
+        <span><i class="e"></i>espacios</span>
+        <span><i class="a"></i>personas por encima de la capacidad, centro por centro</span>
+      </div>
+    </div>
+    <div id="graf2" role="img" aria-label="Gráfica de población penitenciaria total, espacios y personas por encima de la capacidad por centro, mensual desde 2017"></div>
+    <p class="lamina-nota" id="nota-sobre"></p>
+  </section>
+
+  <section class="hitos">
+    <h2>Hitos marcados en la gráfica</h2>
+    <ol id="hitos"></ol>
+  </section>
+
+  <section class="notas">
+    <h2>Fuente y notas</h2>
+    <p>SSPC, Prevención y Reinserción Social: Cuaderno Mensual de Información Estadística Penitenciaria Nacional (PDF). Desde 2017 la cifra sale de la tabla por entidad del cuaderno de cada mes y está validada contra los totales impresos, la suma por centro y los datos abiertos de datos.gob.mx (2025–2026).</p>
+    <p>Sobrepoblación: espacios y población de la tabla por centro del Cuaderno, disponible desde 2017. "Por encima de la capacidad, centro por centro" suma la diferencia entre personas y espacios solo en los centros que tienen más personas que espacios; los centros con lugares libres no restan.</p>
+    <p>2016 y junio a agosto de 2019 vienen de la tabla de comportamiento de 13 meses de cuadernos posteriores. Los PDF de junio a agosto de 2019 se publicaron incompletos. El cuaderno de diciembre de 2017 revisó a la baja el fuero federal de enero a marzo de 2017; aquí se usa la cifra publicada en el cuaderno de cada mes.</p>
+    <p>Datos y código: <a href="https://github.com/jmtoral/cuadernos_penitenciarios" target="_blank" rel="noopener">github.com/jmtoral/cuadernos_penitenciarios</a></p>
+    <details>
+      <summary>Ver la serie completa en tabla</summary>
+      <p class="nota-tabla">* Mes tomado de la tabla de comportamiento de 13 meses de un cuaderno posterior: 2016 completo y junio a agosto de 2019. Es el mismo tramo que aparece punteado en la gráfica.</p>
+      <div class="tabla"><table id="tabla"><thead><tr><th>Mes</th><th>Fuero común</th><th>Fuero federal</th><th>Total sin sentencia</th><th>% de la población</th></tr></thead><tbody></tbody></table></div>
+    </details>
+  </section>
+</div>
+
+<script>
+const SOBRE = __SOBRE__; // [periodo, espacios, poblacion, personas sobre capacidad por centro, centros sobrepoblados, centros]
+const DATA = __DATA__; // [periodo, comun, federal, poblacion_total, fuente e|t]
+const MESES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const MESES_L = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
+const SEXENIOS = [["Peña Nieto","2012-12","2018-11"],["López Obrador","2018-12","2024-09"],["Sheinbaum","2024-10","2030-09"]];
+const HITOS = [
+  ["2016-06","Sistema penal acusatorio en todo el país","Vence el plazo de ocho años de la reforma de 2008."],
+  ["2019-04","Se amplía la prisión preventiva oficiosa","Reforma al artículo 19 (DOF 12/04/2019). En marzo cerró el penal de Islas Marías."],
+  ["2020-04","Ley de Amnistía","DOF 22/04/2020; coincide con el inicio de la pandemia."],
+  ["2024-09","Reforma al Poder Judicial","DOF 15/09/2024: elección de personas juzgadoras."],
+  ["2024-12","Nueva ampliación de la prisión preventiva oficiosa","DOF 31/12/2024: extorsión, fentanilo, contrabando, facturas falsas."],
+  ["2025-09","Toman cargo los juzgadores electos","Primera elección judicial: 1 de junio de 2025."]
+];
+const fmt = n => n.toLocaleString("es-MX");
+const idx = p => { const [y, m] = p.split("-").map(Number); return y * 12 + m - 1; };
+const nombre = p => { const [y, m] = p.split("-").map(Number); return `${MESES_L[m - 1]} de ${y}`; };
+const corto = p => { const [y, m] = p.split("-").map(Number); return `${MESES[m - 1]} ${y}`; };
+const S = DATA.map(([p, c, f, pob, src]) => ({ p, i: idx(p), c, f, t: c + f, pob, src }));
+const byP = Object.fromEntries(S.map(d => [d.p, d]));
+const last = S[S.length - 1];
+
+// encabezado
+document.getElementById("h-total").textContent = fmt(last.t);
+
+// cifras clave
+const pct = (a, b) => ((b - a) / a * 100);
+const sgn = n => (n > 0 ? "+" : "−") + fmt(Math.abs(Math.round(n)));
+const sgnP = n => (n > 0 ? "+" : "−") + Math.abs(n).toFixed(1).replace(".", ",") + " %";
+const minD = S.reduce((a, b) => (b.t < a.t ? b : a));
+const amlo0 = byP["2018-12"], amlo1 = byP["2024-09"], sh0 = byP["2024-10"];
+const mesesSh = last.i - sh0.i;
+const cifras = [
+  ["Último mes", fmt(last.t), `${nombre(last.p)} · ${(last.t / last.pob * 100).toFixed(1).replace(".", ",")} % de toda la población penitenciaria`, true],
+  ["Con López Obrador", sgn(amlo1.t - amlo0.t), `${fmt(amlo0.t)} en dic 2018 → ${fmt(amlo1.t)} en sep 2024 (${sgnP(pct(amlo0.t, amlo1.t))}) en ${amlo1.i - amlo0.i} meses`],
+  ["Con Sheinbaum", sgn(last.t - sh0.t), `${fmt(sh0.t)} en oct 2024 → ${fmt(last.t)} en ${corto(last.p)} (${sgnP(pct(sh0.t, last.t))}) en ${mesesSh} meses`, true],
+  ["Punto más bajo", fmt(minD.t), `${nombre(minD.p)}, primer mes del sexenio de López Obrador`]
+];
+document.getElementById("cifras").innerHTML = cifras.map(([k, v, s, up]) =>
+  `<div class="cifra"><div class="k">${k}</div><div class="v${up ? " up" : ""}">${v}</div><div class="s">${s}</div></div>`).join("");
+
+// hitos (numerados en orden cronológico; el número es la marca en la gráfica)
+document.getElementById("hitos").innerHTML = HITOS.map(([p, t, s], k) =>
+  `<li><b>${k + 1}</b><span><strong>${t}</strong>${corto(p)} · ${s}</span></li>`).join("");
+
+// tabla
+document.querySelector("#tabla tbody").innerHTML = S.slice().reverse().map(d =>
+  `<tr><td>${corto(d.p)}${d.src === "t" ? " *" : ""}</td><td>${fmt(d.c)}</td><td>${fmt(d.f)}</td><td>${fmt(d.t)}</td><td>${(d.t / d.pob * 100).toFixed(1)}</td></tr>`).join("");
+
+// gráfica
+const box = document.getElementById("graf");
+const NS = "http://www.w3.org/2000/svg";
+function el(tag, attrs, parent) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
+
+function dibujar() {
+  box.innerHTML = "";
+  const W = Math.max(320, box.clientWidth), estrecho = W < 600;
+  const H = estrecho ? 340 : 440;
+  const m = { t: 40, r: estrecho ? 14 : 92, b: 34, l: estrecho ? 40 : 52 };
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H }, box);
+  const i0 = S[0].i, i1 = last.i;
+  const x = i => m.l + (i - i0) / (i1 - i0) * (W - m.l - m.r);
+  const yMax = 140000;
+  const y = v => m.t + (1 - v / yMax) * (H - m.t - m.b);
+  const css = getComputedStyle(document.documentElement);
+  const c = n => css.getPropertyValue(n).trim();
+
+  // bandas de sexenio
+  SEXENIOS.forEach(([n, a, b], k) => {
+    const xa = x(Math.max(idx(a), i0)), xb = x(Math.min(idx(b) + 1, i1));
+    if (xb <= xa) return;
+    if (k % 2 === 1) el("rect", { x: xa, y: m.t, width: xb - xa, height: H - m.t - m.b, fill: c("--band") }, svg);
+    const t = el("text", { x: (xa + xb) / 2, y: m.t - 22, "text-anchor": "middle", class: "sx" }, svg);
+    t.textContent = estrecho && n === "López Obrador" ? "AMLO" : n;
+  });
+
+  // rejilla y eje y
+  for (let v = 0; v <= yMax; v += 20000) {
+    el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: c("--rule"), "stroke-width": v === 0 ? 1 : .6 }, svg);
+    const t = el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg);
+    t.textContent = v === 0 ? "0" : (v / 1000) + " mil";
+  }
+  // eje x: años
+  for (let a = 2016; a <= 2026; a++) {
+    const xi = x(idx(`${a}-01`));
+    if (estrecho && a % 2) continue;
+    el("line", { x1: xi, x2: xi, y1: H - m.b, y2: H - m.b + 5, stroke: c("--ink-3") }, svg);
+    const t = el("text", { x: xi, y: H - m.b + 19, "text-anchor": "middle" }, svg);
+    t.textContent = a;
+  }
+
+  // hitos
+  HITOS.forEach(([p], k) => {
+    const xi = x(idx(p));
+    el("line", { x1: xi, x2: xi, y1: m.t, y2: H - m.b, stroke: c("--ink-3"), "stroke-width": .8, "stroke-dasharray": "2 3" }, svg);
+    el("circle", { cx: xi, cy: m.t - 6, r: 8, fill: c("--ink-2") }, svg);
+    const t = el("text", { x: xi, y: m.t - 2.5, "text-anchor": "middle", class: "hito-n" }, svg);
+    t.textContent = k + 1;
+  });
+
+  // área y línea (punteada en tramos de la tabla de 13 meses)
+  const pts = S.map(d => [x(d.i), y(d.t)]);
+  el("path", { d: `M${pts[0][0]},${y(0)} ` + pts.map(q => `L${q[0]},${q[1]}`).join(" ") + ` L${pts[pts.length - 1][0]},${y(0)} Z`, fill: c("--area") }, svg);
+  for (let k = 1; k < S.length; k++) {
+    const t13 = S[k].src === "t" || S[k - 1].src === "t";
+    el("line", { x1: pts[k - 1][0], y1: pts[k - 1][1], x2: pts[k][0], y2: pts[k][1], stroke: c("--line"), "stroke-width": 2.2,
+      "stroke-linecap": "round", "stroke-dasharray": t13 ? "3 3" : "none" }, svg);
+  }
+
+  // etiquetas directas: mínimo y último
+  const marca = (d, txt, ancla, dx, dy, color) => {
+    el("circle", { cx: x(d.i), cy: y(d.t), r: 4.5, fill: color, stroke: c("--panel"), "stroke-width": 2 }, svg);
+    const t = el("text", { x: x(d.i) + dx, y: y(d.t) + dy, "text-anchor": ancla, style: `fill:${c("--ink")};font-size:12px` }, svg);
+    t.textContent = txt;
+  };
+  marca(minD, `${fmt(minD.t)} · ${corto(minD.p)}`, "middle", 0, 20, c("--line"));
+  if (estrecho) marca(last, fmt(last.t), "end", -8, -10, c("--signal"));
+  else marca(last, fmt(last.t), "start", 9, 4, c("--signal"));
+
+  // interacción: cruz + tooltip
+  const cruz = el("line", { y1: m.t, y2: H - m.b, stroke: c("--ink"), "stroke-width": 1, opacity: 0 }, svg);
+  const punto = el("circle", { r: 5, fill: c("--line"), stroke: c("--panel"), "stroke-width": 2, opacity: 0 }, svg);
+  const hit = el("rect", { x: m.l, y: 0, width: W - m.l - m.r, height: H, fill: "transparent" }, svg);
+  let tip = document.getElementById("tip");
+  if (!tip) { tip = document.createElement("div"); tip.id = "tip"; tip.hidden = true; box.appendChild(tip); } else box.appendChild(tip);
+  const mover = ev => {
+    const r = svg.getBoundingClientRect();
+    const px = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
+    const sx = px * W / r.width;
+    const i = Math.round(i0 + (sx - m.l) / (W - m.l - m.r) * (i1 - i0));
+    const d = S[Math.max(0, Math.min(S.length - 1, i - i0))];
+    const cx = x(d.i), cy = y(d.t);
+    cruz.setAttribute("x1", cx); cruz.setAttribute("x2", cx); cruz.setAttribute("opacity", .35);
+    punto.setAttribute("cx", cx); punto.setAttribute("cy", cy); punto.setAttribute("opacity", 1);
+    const prev = byP[S[Math.max(0, d.i - i0 - 12)].p];
+    const var12 = d.i - i0 >= 12 ? `${sgn(d.t - prev.t)} vs. un año antes` : "";
+    tip.innerHTML = `<div class="m">${nombre(d.p)}</div><div class="t">${fmt(d.t)}</div>
+      <dl><dt>Fuero común</dt><dd>${fmt(d.c)}</dd><dt>Fuero federal</dt><dd>${fmt(d.f)}</dd>
+      <dt>% de la población</dt><dd>${(d.t / d.pob * 100).toFixed(1)} %</dd></dl>
+      <div class="f">${var12}${var12 ? " · " : ""}${d.src === "t" ? "tabla de 13 meses" : "tabla por entidad"}</div>`;
+    tip.hidden = false;
+    const scale = r.width / W, tw = tip.offsetWidth, th = tip.offsetHeight;
+    let left = cx * scale + 14; if (left + tw > r.width) left = cx * scale - tw - 14;
+    let top = Math.max(0, cy * scale - th / 2); if (top + th > r.height) top = r.height - th;
+    tip.style.left = Math.max(0, left) + "px"; tip.style.top = top + "px";
+  };
+  const salir = () => { tip.hidden = true; cruz.setAttribute("opacity", 0); punto.setAttribute("opacity", 0); };
+  hit.addEventListener("mousemove", mover);
+  hit.addEventListener("touchstart", mover, { passive: true });
+  hit.addEventListener("touchmove", mover, { passive: true });
+  hit.addEventListener("mouseleave", salir);
+}
+dibujar();
+let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(dibujar, 120); });
+matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", dibujar);
+
+// sobrepoblación (desde 2017; el Cuaderno trae espacios por centro)
+const B = SOBRE.map(([p, esp, pob, exc, n, tot]) => ({ p, i: idx(p), esp, pob, exc, n, tot }));
+const bl = B[B.length - 1];
+document.getElementById("nota-sobre").innerHTML =
+  `En ${nombre(bl.p)} había ${fmt(bl.pob)} personas para ${fmt(bl.esp)} espacios: <strong>${fmt(bl.pob - bl.esp)} por encima de la capacidad nacional (${((bl.pob - bl.esp) / bl.esp * 100).toFixed(1)} %)</strong>. ` +
+  `La cifra neta esconde la saturación, porque los centros con lugares vacíos compensan a los llenos. Centro por centro, <strong>${fmt(bl.exc)} personas</strong> ocupaban un lugar que no existe, en <strong>${bl.n} de ${bl.tot} centros</strong>.`;
+const box2 = document.getElementById("graf2");
+function dibujar2() {
+  box2.innerHTML = "";
+  const W = Math.max(320, box2.clientWidth), estrecho = W < 600;
+  const H = estrecho ? 300 : 380;
+  const m = { t: 40, r: estrecho ? 14 : 92, b: 34, l: estrecho ? 40 : 52 };
+  const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H }, box2);
+  const i0 = S[0].i, i1 = last.i, yMax = 300000;
+  const x = i => m.l + (i - i0) / (i1 - i0) * (W - m.l - m.r);
+  const y = v => m.t + (1 - v / yMax) * (H - m.t - m.b);
+  const css = getComputedStyle(document.documentElement), c = n => css.getPropertyValue(n).trim();
+  SEXENIOS.forEach(([n, a, b], k) => {
+    const xa = x(Math.max(idx(a), i0)), xb = x(Math.min(idx(b) + 1, i1));
+    if (xb <= xa) return;
+    if (k % 2 === 1) el("rect", { x: xa, y: m.t, width: xb - xa, height: H - m.t - m.b, fill: c("--band") }, svg);
+    const t = el("text", { x: (xa + xb) / 2, y: m.t - 12, "text-anchor": "middle", class: "sx" }, svg);
+    t.textContent = estrecho && n === "López Obrador" ? "AMLO" : n;
+  });
+  for (let v = 0; v <= yMax; v += 50000) {
+    el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: c("--rule"), "stroke-width": v === 0 ? 1 : .6 }, svg);
+    const t = el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg);
+    t.textContent = v === 0 ? "0" : (v / 1000) + " mil";
+  }
+  for (let a = 2016; a <= 2026; a++) {
+    if (estrecho && a % 2) continue;
+    const xi = x(idx(`${a}-01`));
+    el("line", { x1: xi, x2: xi, y1: H - m.b, y2: H - m.b + 5, stroke: c("--ink-3") }, svg);
+    const t = el("text", { x: xi, y: H - m.b + 19, "text-anchor": "middle" }, svg);
+    t.textContent = a;
+  }
+  const t16 = el("text", { x: (x(idx("2016-01")) + x(idx("2017-01"))) / 2, y: y(150000), "text-anchor": "middle" }, svg);
+  t16.textContent = estrecho ? "s/d" : "sin datos de espacios";
+  // tramos consecutivos (jun-ago 2019 sin PDF completo)
+  const tramos = [];
+  B.forEach((d, k) => { if (!k || d.i !== B[k - 1].i + 1) tramos.push([]); tramos[tramos.length - 1].push(d); });
+  tramos.forEach(tr => {
+    el("path", { d: `M${x(tr[0].i)},${y(0)} ` + tr.map(d => `L${x(d.i)},${y(d.exc)}`).join(" ") + ` L${x(tr[tr.length - 1].i)},${y(0)} Z`, fill: c("--signal-area") }, svg);
+    el("path", { d: tr.map((d, k) => `${k ? "L" : "M"}${x(d.i)},${y(d.esp)}`).join(" "), fill: "none", stroke: c("--ink-3"), "stroke-width": 2 }, svg);
+    el("path", { d: tr.map((d, k) => `${k ? "L" : "M"}${x(d.i)},${y(d.pob)}`).join(" "), fill: "none", stroke: c("--signal"), "stroke-width": 2.2, "stroke-linejoin": "round" }, svg);
+  });
+  if (!estrecho) {
+    [[bl.pob, -2], [bl.esp, 12], [bl.exc, 4]].forEach(([v, dy]) => {
+      const t = el("text", { x: x(bl.i) + 9, y: y(v) + dy, style: `fill:${c("--ink")};font-size:12px` }, svg);
+      t.textContent = fmt(v);
+    });
+  }
+  const cruz = el("line", { y1: m.t, y2: H - m.b, stroke: c("--ink"), "stroke-width": 1, opacity: 0 }, svg);
+  const hit = el("rect", { x: m.l, y: 0, width: W - m.l - m.r, height: H, fill: "transparent" }, svg);
+  const tip = document.createElement("div"); tip.id = "tip2"; tip.hidden = true; box2.appendChild(tip);
+  const porI = Object.fromEntries(B.map(d => [d.i, d]));
+  const mover = ev => {
+    const r = svg.getBoundingClientRect();
+    const sx = ((ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left) * W / r.width;
+    const i = Math.round(i0 + (sx - m.l) / (W - m.l - m.r) * (i1 - i0));
+    const d = porI[i];
+    if (!d) { tip.hidden = true; cruz.setAttribute("opacity", 0); return; }
+    const cx = x(d.i);
+    cruz.setAttribute("x1", cx); cruz.setAttribute("x2", cx); cruz.setAttribute("opacity", .35);
+    tip.innerHTML = `<div class="m">${nombre(d.p)}</div><div class="t">${fmt(d.exc)}</div>
+      <div class="f">personas por encima de la capacidad, centro por centro</div>
+      <dl><dt>Población</dt><dd>${fmt(d.pob)}</dd><dt>Espacios</dt><dd>${fmt(d.esp)}</dd>
+      <dt>Diferencia nacional</dt><dd>${sgn(d.pob - d.esp)}</dd><dt>Centros sobrepoblados</dt><dd>${d.n} de ${d.tot}</dd></dl>`;
+    tip.hidden = false;
+    const s = r.width / W, tw = tip.offsetWidth, th = tip.offsetHeight;
+    let left = cx * s + 14; if (left + tw > r.width) left = cx * s - tw - 14;
+    tip.style.left = Math.max(0, left) + "px"; tip.style.top = Math.max(0, Math.min(r.height - th, y(d.pob) * s - th / 2)) + "px";
+  };
+  hit.addEventListener("mousemove", mover);
+  hit.addEventListener("touchstart", mover, { passive: true });
+  hit.addEventListener("touchmove", mover, { passive: true });
+  hit.addEventListener("mouseleave", () => { tip.hidden = true; cruz.setAttribute("opacity", 0); });
+}
+dibujar2();
+addEventListener("resize", () => setTimeout(dibujar2, 130));
+matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", dibujar2);
+new MutationObserver(dibujar2).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+new MutationObserver(dibujar).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+</script>
+
+</body>
+</html>

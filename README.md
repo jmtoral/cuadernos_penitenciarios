@@ -6,7 +6,7 @@ Base de datos mensual, reproducible y validada, construida a partir del **Cuader
 
 > Estado (2026‑10‑14): **fase 1 terminada**. 2017‑01 a 2026‑08 está extraído y validado: 113 de 116 meses. Faltan jun–ago 2019, cuyos PDFs publicados están incompletos. Ver [§14](#14-bitácora-de-la-fase-1). Las decisiones de diseño están en [§10](#10-registro-de-decisiones).
 
-**Gráfica interactiva:** <https://jmtoral.github.io/cuadernos_penitenciarios/> (personas sin sentencia, mensual, 2016–2026; fuente en `docs/index.html`).
+**Gráfica interactiva:** <https://jmtoral.github.io/cuadernos_penitenciarios/> (personas sin sentencia, mensual, 2016–2026; `docs/index.html` lo genera `pagina.py` desde `docs/plantilla.html`).
 
 ![Personas procesadas por fuero](graficas/1_procesados_nacional.png)
 
@@ -362,7 +362,7 @@ cuaderno_pen/
 **Correr todo:**
 
 ```bash
-conda activate cuaderno_pen && python descargar.py && python ckan.py && python extraer.py 2017-01 && python validar.py && python notebooks/exploracion.py
+conda activate cuaderno_pen && python descargar.py && python ckan.py && python extraer.py 2017-01 && python validar.py && python notebooks/exploracion.py && python pagina.py
 ```
 
 **Mes nuevo:** agregar su renglón a `data/enlaces.csv` (periodo, URL del PDF) y volver a correr la cadena. Las páginas HTML de gob.mx tienen un desafío anti‑bots, así que las ligas se toman a mano desde el navegador. Los PDFs sí bajan directo.
