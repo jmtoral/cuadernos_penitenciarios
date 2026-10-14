@@ -56,6 +56,12 @@ h1 .n { color: var(--signal); font-variant-numeric: tabular-nums; }
 .leyenda i.e { border-top-color: var(--ink-3); }
 .leyenda i.a { height: 10px; border: 0; background: var(--signal-area); }
 .leyenda i.a.h { background: var(--hueco); }
+.modo { display: inline-flex; border: 1px solid var(--rule); border-radius: 999px; padding: 2px; background: var(--bg); }
+.modo button { font: 500 12.5px/1 var(--body); color: var(--ink-2); background: transparent; border: 0; border-radius: 999px; padding: 6px 12px; cursor: pointer; }
+.modo button[aria-pressed="true"] { background: var(--panel); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
+.modo button:focus-visible { outline: 2px solid var(--line); outline-offset: 1px; }
+.leyenda i.sube { height: 10px; width: 10px; border: 0; background: var(--signal); }
+.leyenda i.baja { height: 10px; width: 10px; border: 0; background: var(--line); }
 .lamina-nota { margin: 0; color: var(--ink-2); font-size: 13.5px; max-width: 80ch; }
 .lamina-nota strong { color: var(--ink); font-weight: 500; }
 #graf, #graf2 { position: relative; width: 100%; min-width: 0; }
@@ -114,7 +120,18 @@ a { color: var(--line); }
   <section class="lamina" aria-labelledby="t-graf">
     <div class="lamina-top">
       <h2 id="t-graf">Población procesada total, mensual</h2>
-      <div class="leyenda">
+      <div class="modo" role="group" aria-label="Vista de la gráfica">
+        <button type="button" id="modo-nivel" data-modo="nivel" aria-pressed="true">Personas</button>
+        <button type="button" id="modo-var" data-modo="var" aria-pressed="false">Variación anual</button>
+      </div>
+    </div>
+    <div class="lamina-top">
+      <div class="leyenda" id="ley-var" hidden>
+        <span><i class="sube"></i>más personas sin sentencia que un año antes</span>
+        <span><i class="baja"></i>menos que un año antes</span>
+        <span>cada barra compara el mes con el mismo mes del año anterior</span>
+      </div>
+      <div class="leyenda" id="ley-nivel">
         <span><i></i>tabla por entidad del cuaderno del mes</span>
         <span><i class="d"></i>tabla de 13 meses de un cuaderno posterior</span>
         <span><i class="a h"></i>jun–ago 2019: el PDF publicado no trae tablas</span>
@@ -245,8 +262,22 @@ addEventListener("blur", ocultarTodo);
 addEventListener("scroll", ocultarTodo, { passive: true });
 addEventListener("touchend", () => setTimeout(ocultarTodo, 1800), { passive: true });
 
+// variación anual: cada mes contra el mismo mes del año anterior (la serie es mensual y continua)
+S.forEach((d, k) => { d.ant = k >= 12 ? S[k - 12] : null; d.v = d.ant ? (d.t - d.ant.t) / d.ant.t * 100 : null; });
+const pctFmt = v => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(1).replace(".", ",") + " %";
+let modo = "nivel";
+document.querySelectorAll(".modo button").forEach(b => b.addEventListener("click", () => {
+  modo = b.dataset.modo;
+  document.querySelectorAll(".modo button").forEach(o => o.setAttribute("aria-pressed", String(o === b)));
+  document.getElementById("ley-var").hidden = modo !== "var";
+  document.getElementById("ley-nivel").hidden = modo === "var";
+  document.getElementById("t-graf").textContent = modo === "var" ? "Variación anual de la población procesada" : "Población procesada total, mensual";
+  dibujar();
+}));
+
 function dibujar() {
   box.innerHTML = "";
+  const VAR = modo === "var";
   const W = Math.max(320, box.clientWidth), estrecho = W < 600;
   const H = estrecho ? 340 : 440;
   const m = { t: 40, r: estrecho ? 14 : 92, b: 34, l: estrecho ? 40 : 52 };
@@ -254,7 +285,9 @@ function dibujar() {
   const i0 = S[0].i, i1 = last.i;
   const x = i => m.l + (i - i0) / (i1 - i0) * (W - m.l - m.r);
   const yMax = 140000;
-  const y = v => m.t + (1 - v / yMax) * (H - m.t - m.b);
+  const lim = Math.ceil(Math.max(...S.filter(d => d.v !== null).map(d => Math.abs(d.v))) / 5) * 5;
+  const y = VAR ? v => m.t + (lim - v) / (2 * lim) * (H - m.t - m.b) : v => m.t + (1 - v / yMax) * (H - m.t - m.b);
+  const val = d => VAR ? d.v : d.t;
   const css = getComputedStyle(document.documentElement);
   const c = n => css.getPropertyValue(n).trim();
 
@@ -268,10 +301,11 @@ function dibujar() {
   });
 
   // rejilla y eje y
-  for (let v = 0; v <= yMax; v += 20000) {
-    el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: c("--rule"), "stroke-width": v === 0 ? 1 : .6 }, svg);
+  const paso = VAR ? (lim > 30 ? 10 : 5) : 20000;
+  for (let v = VAR ? -lim : 0; v <= (VAR ? lim : yMax); v += paso) {
+    el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: v === 0 ? c("--ink-3") : c("--rule"), "stroke-width": v === 0 ? 1 : .6 }, svg);
     const t = el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg);
-    t.textContent = v === 0 ? "0" : (v / 1000) + " mil";
+    t.textContent = VAR ? (v === 0 ? "0" : (v > 0 ? "+" : "−") + Math.abs(v) + " %") : v === 0 ? "0" : (v / 1000) + " mil";
   }
   // eje x: años
   for (let a = 2016; a <= 2026; a++) {
@@ -293,6 +327,18 @@ function dibujar() {
 
   // área y línea (punteada en tramos de la tabla de 13 meses)
   hueco(svg, x, m, H, c, estrecho);
+  if (VAR) {
+    const ancho = Math.max(1.5, (x(i0 + 1) - x(i0)) * .72);
+    S.filter(d => d.v !== null).forEach(d => {
+      el("rect", { x: x(d.i) - ancho / 2, y: Math.min(y(0), y(d.v)), width: ancho, height: Math.max(.5, Math.abs(y(d.v) - y(0))),
+        fill: d.v > 0 ? c("--signal") : c("--line"), opacity: d.src === "t" ? .55 : 1 }, svg);
+    });
+    const t0 = el("text", { x: (x(i0) + x(i0 + 11)) / 2, y: y(0) - 8, "text-anchor": "middle" }, svg);
+    t0.textContent = estrecho ? "" : "2016: sin año previo";
+    const tl = el("text", estrecho ? { x: x(last.i) - 4, y: y(last.v) - 8, "text-anchor": "end", style: `fill:${c("--ink")};font-size:12px` }
+      : { x: x(last.i) + 8, y: y(last.v) + 4, "text-anchor": "start", style: `fill:${c("--ink")};font-size:12px` }, svg);
+    tl.textContent = pctFmt(last.v);
+  } else {
   const pts = S.map(d => [x(d.i), y(d.t)]);
   el("path", { d: `M${pts[0][0]},${y(0)} ` + pts.map(q => `L${q[0]},${q[1]}`).join(" ") + ` L${pts[pts.length - 1][0]},${y(0)} Z`, fill: c("--area") }, svg);
   for (let k = 1; k < S.length; k++) {
@@ -310,6 +356,7 @@ function dibujar() {
   marca(minD, `${fmt(minD.t)} · ${corto(minD.p)}`, "middle", 0, 20, c("--line"));
   if (estrecho) marca(last, fmt(last.t), "end", -8, -10, c("--signal"));
   else marca(last, fmt(last.t), "start", 9, 4, c("--signal"));
+  }
 
   // interacción: cruz + tooltip
   const cruz = el("line", { y1: m.t, y2: H - m.b, stroke: c("--ink"), "stroke-width": 1, opacity: 0 }, svg);
@@ -323,12 +370,18 @@ function dibujar() {
     const sx = px * W / r.width;
     const i = Math.round(i0 + (sx - m.l) / (W - m.l - m.r) * (i1 - i0));
     const d = S[Math.max(0, Math.min(S.length - 1, i - i0))];
-    const cx = x(d.i), cy = y(d.t);
+    if (VAR && d.v === null) { salir(); return; }
+    const cx = x(d.i), cy = y(val(d));
     cruz.setAttribute("x1", cx); cruz.setAttribute("x2", cx); cruz.setAttribute("opacity", .35);
     punto.setAttribute("cx", cx); punto.setAttribute("cy", cy); punto.setAttribute("opacity", 1);
     const prev = byP[S[Math.max(0, d.i - i0 - 12)].p];
     const var12 = d.i - i0 >= 12 ? `${sgn(d.t - prev.t)} vs. un año antes` : "";
-    tip.innerHTML = `<div class="m">${nombre(d.p)}</div><div class="t">${fmt(d.t)}</div>
+    if (VAR) tip.innerHTML = `<div class="m">${nombre(d.p)}</div><div class="t">${pctFmt(d.v)}</div>
+      <div class="f">contra ${nombre(d.ant.p)}</div>
+      <dl><dt>Sin sentencia</dt><dd>${fmt(d.t)}</dd><dt>Un año antes</dt><dd>${fmt(d.ant.t)}</dd>
+      <dt>Diferencia</dt><dd>${sgn(d.t - d.ant.t)}</dd></dl>
+      <div class="f">${d.src === "t" || d.ant.src === "t" ? "incluye un mes de la tabla de 13 meses" : "tabla por entidad"}</div>`;
+    else tip.innerHTML = `<div class="m">${nombre(d.p)}</div><div class="t">${fmt(d.t)}</div>
       <dl><dt>Fuero común</dt><dd>${fmt(d.c)}</dd><dt>Fuero federal</dt><dd>${fmt(d.f)}</dd>
       <dt>% de la población</dt><dd>${(d.t / d.pob * 100).toFixed(1)} %</dd></dl>
       <div class="f">${var12}${var12 ? " · " : ""}${d.p >= HUECO[0] && d.p <= HUECO[1] ? "PDF del mes incompleto; dato de la tabla de 13 meses" : d.src === "t" ? "tabla de 13 meses" : "tabla por entidad"}</div>`;
