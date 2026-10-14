@@ -231,6 +231,20 @@ function hueco(svg, x, m, H, c, estrecho) {
   t.textContent = estrecho ? "PDF sin tablas" : "jun–ago 2019: PDF publicado sin tablas";
 }
 
+// el tooltip se oculta en cuanto el puntero sale de la gráfica, al hacer scroll, al soltar el dedo o al salir de la ventana
+const ocultar = {};
+const ocultarTodo = () => Object.values(ocultar).forEach(f => f());
+document.addEventListener("pointermove", e => {
+  if (!e.target.closest || !e.target.closest("#graf, #graf2")) ocultarTodo();
+  else if (!e.target.closest("#graf")) ocultar.g1?.();
+  else if (!e.target.closest("#graf2")) ocultar.g2?.();
+});
+document.addEventListener("pointerleave", ocultarTodo);
+document.documentElement.addEventListener("mouseleave", ocultarTodo);
+addEventListener("blur", ocultarTodo);
+addEventListener("scroll", ocultarTodo, { passive: true });
+addEventListener("touchend", () => setTimeout(ocultarTodo, 1800), { passive: true });
+
 function dibujar() {
   box.innerHTML = "";
   const W = Math.max(320, box.clientWidth), estrecho = W < 600;
@@ -329,6 +343,7 @@ function dibujar() {
   hit.addEventListener("touchstart", mover, { passive: true });
   hit.addEventListener("touchmove", mover, { passive: true });
   hit.addEventListener("mouseleave", salir);
+  ocultar.g1 = salir;
 }
 dibujar();
 let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(dibujar, 120); });
@@ -437,7 +452,9 @@ function dibujar2() {
   hit.addEventListener("mousemove", mover);
   hit.addEventListener("touchstart", mover, { passive: true });
   hit.addEventListener("touchmove", mover, { passive: true });
-  hit.addEventListener("mouseleave", () => { tip.hidden = true; cruz.setAttribute("opacity", 0); });
+  const salir2 = () => { tip.hidden = true; cruz.setAttribute("opacity", 0); };
+  hit.addEventListener("mouseleave", salir2);
+  ocultar.g2 = salir2;
 }
 dibujar2();
 addEventListener("resize", () => setTimeout(dibujar2, 130));
