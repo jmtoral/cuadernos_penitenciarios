@@ -108,11 +108,7 @@ svg .hito-n { font-family: var(--mono); font-weight: 500; fill: var(--panel); fo
 .hitos li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start; font-size: 13px; line-height: 1.4; }
 .hitos li b { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--ink-2); color: var(--panel); font: 500 11px/1 var(--mono); }
 .hitos li span { color: var(--ink-2); }
-.hitos .fte { font-style: normal; font: 500 10.5px/1 var(--mono); color: var(--line); border: 1px solid var(--rule); border-radius: 999px; padding: 2px 6px; white-space: nowrap; }
-.ant-t { font: 700 14px/1.2 var(--display); margin: 6px 0 0; }
-.ant-l { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
-.ant-l li { display: grid; grid-template-columns: 40px 1fr; gap: 8px; font-size: 12.5px; line-height: 1.4; color: var(--ink-2); }
-.ant-l b.ant { font: 500 12px/1.4 var(--mono); color: var(--ink); }
+.hitos li b.spa { background: var(--signal); }
 .hitos li strong { color: var(--ink); font-weight: 500; display: block; }
 .notas { display: grid; gap: 8px; max-width: 75ch; color: var(--ink-2); font-size: 13.5px; }
 .notas p { margin: 0; }
@@ -243,9 +239,7 @@ a { color: var(--line); }
     <h2 id="t-hitos">Hitos</h2>
     <p class="sub">El número es la marca sobre la gráfica.</p>
     <ol id="hitos"></ol>
-    <h3 class="ant-t">Antes de la serie</h3>
-    <ul id="antecedentes" class="ant-l"></ul>
-    <p class="sub">Los marcados con <em class="fte">Intersecta</em> y los antecedentes vienen de la línea del tiempo de la prisión preventiva oficiosa en <a href="https://www.intersecta.org" target="_blank" rel="noopener">Intersecta</a>, <i>Con juicio o prejuicio</i> (2022).</p>
+    <p class="sub">Los hitos de 2008, 2011, 2013 y 2019 siguen la línea del tiempo de la prisión preventiva oficiosa de Intersecta, <i>Con juicio o prejuicio</i> (2022), <a href="https://www.intersecta.org" target="_blank" rel="noopener">intersecta.org</a>.</p>
   </aside>
   </div>
 
@@ -274,6 +268,7 @@ const FUENTE = { e: "tabla por entidad", t: "tabla de 13 meses", o: "tabla de 13
 const MESES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 const MESES_L = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 const SEXENIOS = [["Zedillo","1994-12","2000-11"],["Fox","2000-12","2006-11"],["Calderón","2006-12","2012-11"],["Peña Nieto","2012-12","2018-11"],["López Obrador","2018-12","2024-09"],["Sheinbaum","2024-10","2030-09"]];
+const SPA = "2016-06"; // sistema penal acusatorio en todo el país: hito destacado en rojo
 // [mes, título, detalle, fuente]; "I" = hito tomado de la línea del tiempo de Intersecta (Con juicio o prejuicio, 2022)
 const HITOS = [
   ["2008-06","Reforma penal: sistema acusatorio y presunción de inocencia","DOF 18/06/2008. La palabra «oficiosamente» entra a la Constitución.","I"],
@@ -285,13 +280,6 @@ const HITOS = [
   ["2024-09","Reforma al Poder Judicial","DOF 15/09/2024: elección de personas juzgadoras."],
   ["2024-12","Nueva ampliación de la prisión preventiva oficiosa","DOF 31/12/2024: extorsión, fentanilo, contrabando, facturas falsas."],
   ["2025-09","Toman cargo los juzgadores electos","Primera elección judicial: 1 de junio de 2025."]
-];
-// antecedentes anteriores a la serie (Intersecta): sin marca en la gráfica
-const ANTECEDENTES = [
-  ["1917", "La Constitución ya prevé prisión automática para delitos con pena mayor a cinco años."],
-  ["1948", "Procede para delitos cuya pena, en promedio, supere cinco años."],
-  ["1985", "Se extiende a las «modalidades» de los delitos."],
-  ["1993", "Procede por «delitos graves» que cada legislatura define; las listas estatales crecen."]
 ];
 const fmt = n => n.toLocaleString("es-MX");
 const idx = p => { const [y, m] = p.split("-").map(Number); return y * 12 + m - 1; };
@@ -325,8 +313,7 @@ document.getElementById("cifras").innerHTML = cifras.map(([k, v, s, up]) =>
 
 // hitos (numerados en orden cronológico; el número es la marca en la gráfica)
 document.getElementById("hitos").innerHTML = HITOS.map(([p, t, s, f], k) =>
-  `<li><b>${k + 1}</b><span><strong>${t}</strong>${corto(p)} · ${s}${f === "I" ? ' <em class="fte">Intersecta</em>' : ""}</span></li>`).join("");
-document.getElementById("antecedentes").innerHTML = ANTECEDENTES.map(([a, s]) => `<li><b class="ant">${a}</b><span>${s}</span></li>`).join("");
+  `<li><b${p === SPA ? ' class="spa"' : ""}>${k + 1}</b><span><strong>${t}</strong>${corto(p)} · ${s}</span></li>`).join("");
 
 // tabla
 document.querySelector("#tabla tbody").innerHTML = S.slice().reverse().map(d =>
@@ -426,10 +413,11 @@ function dibujar() {
   }
 
   // hitos
-  HITOS.forEach(([p], k) => {
+  HITOS.forEach(([p], k) => {  // p: mes del hito
     const xi = x(idx(p));
-    el("line", { x1: xi, x2: xi, y1: m.t, y2: H - m.b, stroke: c("--ink-3"), "stroke-width": .8, "stroke-dasharray": "2 3" }, svg);
-    el("circle", { cx: xi, cy: m.t - 6, r: 8, fill: c("--ink-2") }, svg);
+    const rojo = p === SPA;
+    el("line", { x1: xi, x2: xi, y1: m.t, y2: H - m.b, stroke: c(rojo ? "--signal" : "--ink-3"), "stroke-width": rojo ? 1.4 : .8, "stroke-dasharray": rojo ? "none" : "2 3" }, svg);
+    el("circle", { cx: xi, cy: m.t - 6, r: 8, fill: c(rojo ? "--signal" : "--ink-2") }, svg);
     const t = el("text", { x: xi, y: m.t - 2.5, "text-anchor": "middle", class: "hito-n" }, svg);
     t.textContent = k + 1;
   });
