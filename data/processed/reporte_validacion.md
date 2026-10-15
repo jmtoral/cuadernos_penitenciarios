@@ -1,18 +1,18 @@
 # Reporte de validación
 
-- Meses revisados: 116 (2017-01 a 2026-08)
+- Meses revisados: 152 (2014-01 a 2026-08)
 - Meses con algún chequeo fallido: 3
 - Meses con revisiones retroactivas en la tabla de 13 meses (informativo): 11
 
 | chequeo | meses ok | meses con falla |
 |---|---|---|
-| centros_vs_entidad | 113 | 0 |
-| entidades_vs_nacional | 113 | 0 |
+| centros_vs_entidad | 149 | 0 |
+| entidades_vs_nacional | 149 | 0 |
 | extraccion | 0 | 3 |
-| nacional_vs_13m | 113 | 0 |
+| nacional_vs_13m | 149 | 0 |
 | pdf_vs_csv | 12 | 0 |
-| revisiones_13m | 102 | 11 |
-| suma_sexo | 113 | 0 |
+| revisiones_13m | 138 | 11 |
+| suma_sexo | 149 | 0 |
 
 ## Fallas
 

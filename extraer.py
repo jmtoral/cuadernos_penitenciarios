@@ -1,4 +1,4 @@
-"""Extrae de los PDFs (época C, 2017+) las tablas de población por fuero/situación/sexo.
+"""Extrae de los PDFs (épocas B y C, 2014+) las tablas de población por fuero/situación/sexo.
 
 Lee data/raw/manifiesto.csv y escribe en data/processed/:
   poblacion.csv      nivel entidad (tabla por entidad) y centro (tabla por centro)
@@ -96,6 +96,17 @@ def periodo_impreso(pagina):
     return f"{anio}-{MESES.index(mes) + 1:02d}"
 
 
+def pegar(ws):
+    """Une palabras partidas sin espacio entre ellas ("Ju" + "l")."""
+    salida = []
+    for w in ws:
+        if salida and w["x0"] - salida[-1]["x1"] < 0.5 and not NUM.match(w["text"]):
+            salida[-1] = {**salida[-1], "text": salida[-1]["text"] + w["text"], "x1": w["x1"]}
+        else:
+            salida.append(w)
+    return salida
+
+
 def x_encabezado(pagina, defecto):
     """Borde izquierdo de la zona de cifras: el renglón de encabezado con muchas H/M."""
     for _, ws in filas_de(pagina):
@@ -132,6 +143,8 @@ def renglones(paginas, defecto, por_encabezado=True):
             elif texto and not cifras:
                 sueltos.append((y, texto, etiqueta[0]["x0"]))
         for y, texto, x0 in sueltos:
+            if re.match(r"CEFERESO|CENTROS PEN\w* FEDERALES$", norm(texto)):
+                continue  # 2016-11: centro sin cifras o encabezado de grupo; no es parte del nombre vecino
             vecinos = [d for d in datos if abs(d[0] - y) < 12]
             # primero un renglón de cifras sin etiqueta; si no, el más cercano
             cerca = min(vecinos, key=lambda d: (d[1] != "", abs(d[0] - y)), default=None)
@@ -196,7 +209,7 @@ def emitir_poblacion(salida, base, valores):
 
 
 def tabla_entidad(pdf, periodo, meta, poblacion, impresos):
-    pags = paginas_con(pdf, "SEGUN FUERO, SITUACION JURIDICA Y SEXO", sin=("ESPACIOS", "EDAD", "ESCOLARIDAD", "ORIGEN", "INDIGENA", "INCIDENCIA", "EN LOS CENTROS"))
+    pags = paginas_con(pdf, "SEGUN FUERO, SITUACION JURIDICA Y SEXO", sin=("ESPACIOS", "CAPACIDAD", "EDAD", "ESCOLARIDAD", "ORIGEN", "INDIGENA", "INCIDENCIA", "EN LOS CENTROS", "EN LAS INSTITUCIONES"))
     if not pags:
         raise ValueError("no encontré la tabla por entidad")
     ambito = "estatal"
@@ -204,6 +217,11 @@ def tabla_entidad(pdf, periodo, meta, poblacion, impresos):
     filas = []
     for i, g in enumerate(grupos):  # 2020-2021: estados y centros federales en páginas con título distinto
         rs = renglones(g, 190)
+        # 2016-11: "Total" de estados, CEFERESO, "Total" federal y "Total del mes de <mes>": los dos primeros son subtotales
+        mes_actual = MESES[int(periodo[5:]) - 1]
+        sig = [norm(r[0]) for r in rs[1:]] + [""]
+        rs = [("Subtotal", *r[1:]) if norm(r[0]) == "TOTAL" and s and (not s.startswith("TOTAL") or s.startswith(f"TOTAL DEL MES DE {mes_actual}"))
+              else r for r, s in zip(rs, sig)]
         col = columnas(rs, [COLS_ENT, COLS_ENT_PPCT, COLS_ENT_PCT], "entidad")
         fin = next((j for j, r in enumerate(rs) if norm(r[0]).startswith("TOTAL")), len(rs))
         filas += [(r, col) for r in rs[:fin]]  # tras "Total" viene "Total del mes de <mes anterior>" (2020-2022)
@@ -227,9 +245,10 @@ def tabla_entidad(pdf, periodo, meta, poblacion, impresos):
 
 
 def tabla_centro(pdf, periodo, meta, poblacion, capacidad, impresos):
-    pags = paginas_con(pdf, "ESPACIOS, SOBREPOBLACION Y POBLACION", "CENTRO")
+    pags = paginas_con(pdf, "SOBREPOBLACION Y POBLACION", "SEGUN FUERO")  # "ESPACIOS, ..." (2016+) o "CAPACIDAD, ..." (2014-2016); "...Y CENTRO" o "...E INSTITUCION PENITENCIARIA FEDERAL"
     if not pags:
         raise ValueError("no encontré la tabla por centro")
+    concepto = "Capacidad" if titulo(pags[0]).strip().startswith("CAPACIDAD") else "Espacios"
     rs = renglones(pags, 230, por_encabezado=False)
     hasta = next((i for i, r in enumerate(rs) if norm(r[0]) == "TOTAL"), len(rs))
     col = columnas(rs[:hasta + 1], [COLS_CEN, COLS_CEN_SIN_PCT, COLS_CEN_SIN_TOTAL], "centro")
@@ -239,16 +258,17 @@ def tabla_centro(pdf, periodo, meta, poblacion, capacidad, impresos):
         if norm(etiqueta) == "TOTAL":
             impresos += [{**meta, "tabla": "centro", "fila": "TOTAL", "columna": k, "valor": v} for k, v in valores.items()]
             break
-        grupo = norm(etiqueta) in ESTADOS or re.fullmatch(r"CENTROS? PENITENCIARIOS? FEDERAL(ES)?", norm(etiqueta))
+        # 2014-2015: el grupo federal se llama "Instituciones Penitenciarias Federales"
+        grupo = norm(etiqueta) in ESTADOS or re.fullmatch(r"(CENTROS? PENITENCIARIOS?|INSTITUCIONES PENITENCIARIAS) FEDERAL(ES)?", norm(etiqueta))
         if FEDERAL.match(norm(etiqueta)) and ambito == "estatal" and not grupo:
             entidad, ambito = "Centros federales", "federal"  # sin renglón de grupo (2017-2019)
         if grupo:
-            federal = "FEDERAL" in norm(etiqueta)
+            federal = norm(etiqueta) not in ESTADOS  # "Distrito Federal" es estado
             entidad, ambito = ("Centros federales", "federal") if federal else (etiqueta, "estatal")
             impresos += [{**meta, "tabla": "centro", "fila": entidad, "columna": k, "valor": v} for k, v in valores.items()]
             if "espacios" in valores:
                 capacidad.append({**meta, "nivel": "entidad", "entidad_raw": entidad, "centro_raw": "",
-                                  "ambito_centro": ambito, "concepto_raw": "Espacios", "valor": valores["espacios"], "pagina": pagina})
+                                  "ambito_centro": ambito, "concepto_raw": concepto, "valor": valores["espacios"], "pagina": pagina})
             continue
         if entidad is None:
             raise ValueError(f"centro sin entidad: {etiqueta}")
@@ -256,7 +276,7 @@ def tabla_centro(pdf, periodo, meta, poblacion, capacidad, impresos):
                 "ambito_centro": ambito, "pagina": pagina}
         emitir_poblacion(poblacion, base, valores)
         if "espacios" in valores:
-            capacidad.append({**base, "concepto_raw": "Espacios", "valor": valores["espacios"]})
+            capacidad.append({**base, "concepto_raw": concepto, "valor": valores["espacios"]})
         impresos += [{**meta, "tabla": "centro", "fila": f"{entidad} | {etiqueta}", "columna": k, "valor": v}
                      for k, v in valores.items() if k in ("c_sub", "f_sub", "total")]
 
@@ -265,9 +285,10 @@ def tabla_13m(pdf, periodo, meta, nacional):
     pags = paginas_con(pdf, "COMPORTAMIENTO", "VARIACION")
     if not pags:
         raise ValueError("no encontré la tabla de 13 meses")
-    abrev = {m[:3]: i for i, m in enumerate(MESES)}
+    abrev = {m[:3]: i for i, m in enumerate(MESES)} | {"AUG": 7}  # 2016-02 trae "Aug"
     rs = []  # renglón = palabra de mes + cifras a su derecha; se ignoran renglones con dos meses ("Dic 2021 - Dic 2022")
     for _, ws in filas_de(pags[0]):
+        ws = pegar(ws)  # 2014-07: "Jul" viene partido en "Ju" + "l"
         meses = [w for w in ws if norm(w["text"]).rstrip(".*")[:3] in abrev and len(norm(w["text"]).rstrip(".*")) <= 4]
         if len(meses) != 1:
             continue
@@ -275,12 +296,14 @@ def tabla_13m(pdf, periodo, meta, nacional):
         if len(cifras) >= 18:  # el renglón "Incremento ... Ene 2017 -" trae menos cifras
             rs.append((meses[0]["text"], 0, cifras, pags[0].page_number))
     # 13 renglones; en algunos cuadernos de 2017 falta el del propio mes (ya está en la tabla por entidad)
+    # y en 2014-07 el primero (su etiqueta cae en otro renglón): se anclan al final si el último es el mes del cuaderno
     if len(rs) not in (12, 13):
         raise ValueError(f"13m: {len(rs)} renglones de mes")
     col = columnas(rs, [COLS_13M], "13m")
     anio, mes = map(int, periodo.split("-"))
+    al_final = abrev[norm(rs[-1][0]).rstrip(".*")[:3]] == mes - 1
     for i, (etiqueta, _, cifras, _) in enumerate(rs):
-        k = anio * 12 + mes - 1 - (12 - i)
+        k = anio * 12 + mes - 1 - ((len(rs) - 1 - i) if al_final else (12 - i))
         reportado = f"{k // 12}-{k % 12 + 1:02d}"
         if abrev[norm(etiqueta).rstrip(".*")[:3]] != k % 12:
             raise ValueError(f"13m: renglón {etiqueta} no es {reportado}")
@@ -305,7 +328,7 @@ CAMPOS = {
 }
 
 
-def main(desde="2017-01", hasta="9999-99"):
+def main(desde="2014-01", hasta="9999-99"):
     salidas = {k: [] for k in CAMPOS}
     for m in csv.DictReader(open(RAIZ / "data/raw/manifiesto.csv", encoding="utf-8")):
         if not desde <= m["periodo"] <= hasta:

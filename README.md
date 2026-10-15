@@ -4,7 +4,7 @@ Base de datos mensual, reproducible y validada, construida a partir del **Cuader
 
 **Pregunta central.** ¿Cómo ha evolucionado el número de **personas procesadas, es decir, privadas de la libertad sin sentencia**? Primero se mira el sexenio de López Obrador comparado con el de Peña Nieto; después, el resto de la historia disponible (2006 a la fecha y, más adelante, desde 2000).
 
-> Estado (2026‑10‑14): **fase 1 terminada**. 2017‑01 a 2026‑08 está extraído y validado: 113 de 116 meses. Faltan jun–ago 2019, cuyos PDFs publicados están incompletos. Ver [§14](#14-bitácora-de-la-fase-1). Las decisiones de diseño están en [§10](#10-registro-de-decisiones).
+> Estado (2026‑10‑14): **fases 1 y 2 terminadas**. 2014‑01 a 2026‑08 está extraído y validado: 149 de 152 meses. Faltan jun–ago 2019, cuyos PDFs publicados están incompletos. Para cerrar la base de Peña Nieto falta dic‑2012 a dic‑2013 (fase 3, época A); a nivel nacional ya se cubre con la tabla de 13 meses de los cuadernos de 2014. Ver [§14](#14-bitácora). Las decisiones de diseño están en [§10](#10-registro-de-decisiones).
 
 **Gráfica interactiva:** <https://jmtoral.github.io/cuadernos_penitenciarios/> (personas sin sentencia, mensual, 2016–2026; `docs/index.html` lo genera `pagina.py` desde `docs/plantilla.html`).
 
@@ -27,7 +27,7 @@ Base de datos mensual, reproducible y validada, construida a partir del **Cuader
 11. [Hoja de ruta](#11-hoja-de-ruta)
 12. [Trampas conocidas](#12-trampas-conocidas)
 13. [Glosario](#13-glosario)
-14. [Bitácora de la fase 1](#14-bitácora-de-la-fase-1)
+14. [Bitácora](#14-bitácora)
 15. [Diferencias con los censos de INEGI](#15-diferencias-con-los-censos-de-inegi)
 
 ---
@@ -120,7 +120,7 @@ gantt
 |---|---|---|---|---|
 | **0** | 2000‑2005 | **escaneado, sin capa de texto** | requiere OCR | 5 (posible uso de Colab con GPU) |
 | **A** | 2006‑2013 (43‑54 pp.) | sí | tabla por entidad "según fuero, situación jurídica y sexo" impresa en **dos bloques lado a lado**, así que las filas se intercalan al extraer. Ya hay tablas por centro ("Capacidad, sobrepoblación y población… por entidad federativa y centro"). Habla de "Internos" y "Procesados". | 3 |
-| **B** | 2014‑2016 (60 pp.) | sí | mismo contenido; dice "institución penitenciaria" | 2 |
+| **B** | 2014‑2016 (58‑61 pp.) | sí | mismo contenido que la C, con variantes de títulos y renglones (ver [§12](#12-trampas-conocidas)); dice "Capacidad" e "Instituciones penitenciarias federales" hasta 2016 | 2 |
 | **C** | 2017/2019‑2026 | sí | "Población privada de la libertad", "Personas procesadas", "Espacios". Tabla de origen por cada CEFERESO. Su estructura equivale a los CSV de 2026. | 1 |
 
 Todas las épocas traen fuero común/federal, sexo y procesados/sentenciados. Todas incluyen una **tabla nacional de 13 meses**, de modo que cada cuaderno sirve para revisar los 12 anteriores.
@@ -335,7 +335,7 @@ cuaderno_pen/
 ├── README.md
 ├── .gitignore              # excluye data/raw/
 ├── descargar.py            # data/enlaces.csv → PDFs + manifiesto
-├── extraer.py              # PDFs → poblacion/capacidad/nacional_13m/impresos (época C, 2017+)
+├── extraer.py              # PDFs → poblacion/capacidad/nacional_13m/impresos (épocas B y C, 2014+)
 ├── ckan.py                 # datastore_search → data/raw/ckan/<AAAA-MM>/
 ├── validar.py              # chequeos de §6 → validacion.csv + reporte_validacion.md
 ├── notebooks/
@@ -362,7 +362,7 @@ cuaderno_pen/
 **Correr todo:**
 
 ```bash
-conda activate cuaderno_pen && python descargar.py && python ckan.py && python extraer.py 2017-01 && python validar.py && python notebooks/exploracion.py && python pagina.py
+conda activate cuaderno_pen && python descargar.py && python ckan.py && python extraer.py 2014-01 && python validar.py && python notebooks/exploracion.py && python pagina.py
 ```
 
 **Mes nuevo:** agregar su renglón a `data/enlaces.csv` (periodo, URL del PDF) y volver a correr la cadena. Las páginas HTML de gob.mx tienen un desafío anti‑bots, así que las ligas se toman a mano desde el navegador. Los PDFs sí bajan directo.
@@ -431,6 +431,14 @@ Para la base de Peña Nieto (dic‑2012 a nov‑2018) se necesitan las épocas A
   - 2020‑2022: la tabla por entidad no trae renglón "Subtotal" antes de los CEFERESO, y agrega "Total del mes de <mes anterior>".
 
   El extractor acepta las dos variantes de columnas y reconoce a los centros federales por su nombre (`CEFERESO`, `CEFEREPSI`, `Centro Penitenciario Federal`, `CPS`…).
+- **Variantes de la época B (2014‑2016)**, todas detectadas por el texto y no por la fecha:
+  - La tabla por centro se titula "**Capacidad**, sobrepoblación y población…" hasta jun‑2016 y "Espacios, …" desde jul‑2016. `concepto_raw` guarda cuál de las dos.
+  - De jul‑2014 a jun‑2016 los títulos dicen "…por entidad federativa **e institución penitenciaria federal**" en lugar de "…y centro penitenciario", y las fichas por CEFERESO dicen "en las instituciones penitenciarias federales". El renglón de grupo federal en la tabla por centro es "Instituciones Penitenciarias Federales".
+  - Hasta 2015 la entidad es "**Distrito Federal**": es un estado, no un grupo federal.
+  - La tabla por entidad trae % tras cada subtotal (22 columnas, como ene–jun 2017) y no tiene renglón "Subtotal". Cierra con "Total del mes de <mes>" y "Total del mes de <mes anterior>".
+  - **Nov‑2016** cierra los estados con un "Total", pone el encabezado "CENTROS PENTENCIARIOS FEDERALES" (sic), lista los CEFERESO, cierra con otro "Total" y luego "Total del mes". Los dos primeros "Total" se tratan como subtotales. CEFERESO 3 Noreste aparece sin cifras.
+  - Tabla de 13 meses: "Jul" partido en "Ju" + "l" y el renglón de jul‑2013 desfasado (jul‑2014), y "Aug" en inglés (feb‑2016).
+- **Nombres sueltos que no son del renglón vecino.** Un renglón con solo un nombre que empieza con `CEFERESO` (un centro sin cifras) o el encabezado de centros federales no se pega a otro renglón. Antes se pegaba: en ene–abr 2017, "CEFERESO No. 3 Noreste" quedaba unido a CEFEREPSI o a CEFERESO 4.
 - **Pie de página.** El número de página comparte renglón con "Elaborado por…", así que se descartan los renglones de pie (Fuente, Nota, Elaborado).
 - **Hueco de dic‑2003** (época 0, no afecta a las fases 1‑4).
 - **Conjunto de CEFERESO cambiante.** Hubo cierres (Islas Marías, entre otros) y aperturas de CPS privados desde ~2012. Por eso `centro_raw` va sin armonizar.
@@ -453,7 +461,9 @@ Para la base de Peña Nieto (dic‑2012 a nov‑2018) se necesitan las épocas A
 
 ---
 
-## 14. Bitácora de la fase 1
+## 14. Bitácora
+
+### Fase 1: época C, 2017‑2026
 
 **Fecha:** 2026‑10‑14. **Duración total:** ~3 h 10 min de trabajo continuo, de las ~11:15 (ligas y descarga) a las ~14:25 (validación limpia y notebook).
 
@@ -494,8 +504,48 @@ Para la base de Peña Nieto (dic‑2012 a nov‑2018) se necesitan las épocas A
 - **Jun–ago 2019** no tienen tablas en el PDF publicado. A nivel nacional se cubren con la tabla de 13 meses de cuadernos posteriores (así lo hace la gráfica 1); a nivel entidad y centro quedan vacíos. Hay que buscar si PRS los publicó en otro lado.
 - **Revisión retroactiva rara en el cuaderno de dic‑2017.** Su tabla de 13 meses reporta para ene–mar 2017 un fuero federal de ~9 mil procesados, contra ~20 mil en los cuadernos de esos meses. Parece un cambio de criterio (¿qué cuenta como "federal"?) y hay que investigarlo antes de comparar 2017 con años posteriores.
 - Las demás revisiones retroactivas son de ±1 persona (2023‑2024).
-- **Centros federales sin armonizar:** en la gráfica 3, CEFERESO 3 muestra un pico improbable en 2017. Las sumas validan, así que es una etiqueta de centro mal asignada y no una cifra mala. Queda para la fase 4.
+- **Centros federales sin armonizar:** en la gráfica 3, CEFERESO 3 muestra un pico improbable en 2017. Las sumas validan, así que es una etiqueta de centro mal asignada y no una cifra mala. *Resuelto en la fase 2:* eran nombres pegados (ver §12).
 - **Entorno en Windows:** correr con `conda activate cuaderno_pen`. Llamar al `python.exe` del entorno sin activarlo carga DLLs del Anaconda base y matplotlib se cae (código 0xc06d007f).
+
+### Fase 2: época B, 2014‑2016
+
+**Fecha:** 2026‑10‑14. **Duración total:** ~3 h 40 min, de las ~16:35 a las ~20:15. Casi todo fue tiempo de máquina: tres corridas completas de ~50 min.
+
+| Etapa | Tiempo aprox. |
+|---|---|
+| Revisar títulos y columnas en 3 muestras (2014‑01, 2015‑07, 2016‑12) y agregar las primeras variantes | 15 min |
+| Corridas de 2014‑2016 (36 meses, ~25 s por mes) y correcciones entre una y otra | ~55 min |
+| Corridas completas de 2014‑2026 (152 meses) | ~2 h 35 min |
+| Validación, gráficas, README | 10 min |
+
+**Corridas:** 3 de 2014‑2016 (a una carpeta temporal) y 3 completas de 2014‑2026.
+
+| # | Alcance | Resultado | Qué se corrigió después |
+|---|---|---|---|
+| 1 | 2014‑2016 | 24 meses sin tabla por centro | títulos "Capacidad, …" y "…e institución penitenciaria federal"; excluir las fichas "en las instituciones penitenciarias federales" de la tabla por entidad |
+| 2 | 2014‑2016 | 0 errores de lectura, 34 meses con falla en `centros_vs_entidad` y 2 sin tabla de 13 meses | "Distrito Federal" se tomaba como grupo federal; grupo "Instituciones Penitenciarias Federales"; "Ju l" y "Aug" en la tabla de 13 meses |
+| 3 | 2014‑2016 | 1 mes con falla (2016‑11) | los "Total" intermedios de nov‑2016 se tratan como subtotales |
+| 4 | 2014‑2026 | `validar.py` se cae: en 2025‑07 a 2026‑08 el "Total" final se tomaba como subtotal | un "Total" solo es subtotal si le sigue otro renglón |
+| 5 | 2014‑2026 | 3 errores (PDFs incompletos de 2019) y 0 fallas | `concepto_raw` decía "Espacios" en meses con "Capacidad": el título trae un renglón vacío al inicio. Las cifras no cambian. |
+| 6 | 2014‑2026 | **3 errores (PDFs incompletos de 2019) y 0 fallas**; "Capacidad" de 2014‑01 a 2016‑06 | — |
+
+**Resultado final** (`data/processed/reporte_validacion.md`):
+
+| chequeo | meses ok | meses con falla |
+|---|---|---|
+| suma_sexo | 149 | 0 |
+| entidades_vs_nacional | 149 | 0 |
+| centros_vs_entidad | 149 | 0 |
+| nacional_vs_13m | 149 | 0 |
+| pdf_vs_csv (celda a celda, entidad y centro) | 12 | 0 |
+| extraccion | — | 3 (2019‑06, 2019‑07, 2019‑08: PDFs de 1–2 páginas) |
+
+**Hallazgos:**
+
+- **2014‑2016 no tiene revisiones retroactivas.** Cada cuaderno coincide con la tabla de 13 meses de los posteriores. Las 11 revisiones del reporte son de 2017 y 2023‑2024, igual que en la fase 1.
+- **Efecto sobre 2017‑2026.** Las cifras no cambian. Hay dos mejoras: (1) se corrigieron los nombres de centro pegados de ene–abr 2017, que explicaban el pico de CEFERESO 3; (2) los cuadernos 2017‑03, 2017‑04, 2017‑08, 2018‑08 y 2018‑11 recuperan el renglón de su propio mes en la tabla de 13 meses (20 filas más en `nacional_13m.csv`).
+- **CEFERESO 3 Noreste** deja de tener población a fines de 2016 (en nov‑2016 aparece sin cifras).
+- **Velocidad:** ~20–30 s por cuaderno. pdfplumber lee palabra por palabra con coordenadas unas 60 páginas por PDF. La corrida completa de 152 meses tarda ~50 min.
 
 ---
 
