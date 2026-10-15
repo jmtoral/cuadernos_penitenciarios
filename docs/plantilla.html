@@ -22,13 +22,14 @@
   --signal: #b4451f;
   --signal-area: rgba(180, 69, 31, .16);
   --hueco: rgba(124, 134, 151, .14);
+  --zona-sent: rgba(31, 79, 143, .08);
   --display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
   --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --mono: "IBM Plex Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
 }
 :root[data-theme="dark"] {
   --bg: #10141b; --panel: #161c25; --ink: #eef1f6; --ink-2: #b3bccb; --ink-3: #8691a3;
-  --rule: #2a3340; --band: #1c2430; --line: #79a8ec; --area: rgba(121, 168, 236, .16); --signal: #f08a5d; --signal-area: rgba(240, 138, 93, .2); --hueco: rgba(134, 145, 163, .16);
+  --rule: #2a3340; --band: #1c2430; --line: #79a8ec; --area: rgba(121, 168, 236, .16); --signal: #f08a5d; --signal-area: rgba(240, 138, 93, .2); --hueco: rgba(134, 145, 163, .16); --zona-sent: rgba(121, 168, 236, .09);
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
@@ -61,6 +62,8 @@ h1 .n { color: var(--signal); font-variant-numeric: tabular-nums; }
 .modo button { font: 500 12.5px/1 var(--body); color: var(--ink-2); background: transparent; border: 0; border-radius: 999px; padding: 6px 12px; cursor: pointer; }
 .modo button[aria-pressed="true"] { background: var(--panel); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
 .modo button:focus-visible { outline: 2px solid var(--line); outline-offset: 1px; }
+.leyenda i.zs { height: 10px; width: 14px; border: 0; background: var(--zona-sent); }
+.leyenda i.zp { height: 10px; width: 14px; border: 0; background: var(--signal-area); }
 .leyenda i.sube { height: 10px; width: 10px; border: 0; background: var(--signal); }
 .leyenda i.baja { height: 10px; width: 10px; border: 0; background: var(--line); }
 .lamina-nota { margin: 0; color: var(--ink-2); font-size: 13.5px; max-width: 80ch; }
@@ -130,8 +133,9 @@ a { color: var(--line); }
     </div>
     <div class="lamina-top">
       <div class="leyenda" id="ley-raz" hidden>
-        <span><i></i>personas procesadas por cada 100 sentenciadas</span>
-        <span>100 = tantas personas sin sentencia como con sentencia</span>
+        <span><i></i>procesadas por cada 100 sentenciadas</span>
+        <span><i class="zs"></i>zona: más sentenciadas que procesadas</span>
+        <span><i class="zp"></i>zona: más procesadas que sentenciadas</span>
       </div>
       <div class="leyenda" id="ley-sit" hidden>
         <span><i></i>procesadas (sin sentencia)</span>
@@ -302,7 +306,7 @@ function dibujar() {
   const x = i => m.l + (i - i0) / (i1 - i0) * (W - m.l - m.r);
   const yMax = SIT ? 180000 : 140000;
   const lim = Math.ceil(Math.max(...S.filter(d => d.v !== null).map(d => Math.abs(d.v))) / 5) * 5;
-  const razMax = Math.max(110, Math.ceil(Math.max(...S.map(d => d.t / (d.pob - d.t) * 100)) / 10) * 10);
+  const razMax = Math.max(130, Math.ceil(Math.max(...S.map(d => d.t / (d.pob - d.t) * 100)) / 10) * 10);
   const y = RAZ ? v => m.t + (1 - v / razMax) * (H - m.t - m.b) : VAR ? v => m.t + (lim - v) / (2 * lim) * (H - m.t - m.b) : v => m.t + (1 - v / yMax) * (H - m.t - m.b);
   const raz = d => d.t / (d.pob - d.t) * 100;
   const val = d => VAR ? d.v : RAZ ? raz(d) : d.t;
@@ -358,11 +362,17 @@ function dibujar() {
       : { x: x(last.i) + 8, y: y(last.v) + 4, "text-anchor": "start", style: `fill:${c("--ink")};font-size:12px` }, svg);
     tl.textContent = pctFmt(last.v);
   } else if (RAZ) {
-    el("line", { x1: m.l, x2: W - m.r, y1: y(100), y2: y(100), stroke: c("--signal"), "stroke-width": 1, "stroke-dasharray": "5 4" }, svg);
-    const tp = el("text", { x: m.l + 6, y: y(100) + 14, style: `fill:${c("--signal")};font-size:11px` }, svg);
-    tp.textContent = "100: igual número de procesadas y sentenciadas";
+    // dos zonas: debajo de 100 hay más sentenciadas; encima, más procesadas (nunca ocurrió en la serie)
+    el("rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: y(100) - m.t, fill: c("--signal-area") }, svg);
+    el("rect", { x: m.l, y: y(100), width: W - m.l - m.r, height: y(0) - y(100), fill: c("--zona-sent") }, svg);
+    el("line", { x1: m.l, x2: W - m.r, y1: y(100), y2: y(100), stroke: c("--signal"), "stroke-width": 1.2 }, svg);
+    const zp = el("text", { x: m.l + 8, y: (m.t + y(100)) / 2 + 4, style: `fill:${c("--signal")};font-size:11.5px;font-weight:500` }, svg);
+    zp.textContent = estrecho ? "más procesadas" : "Más procesadas que sentenciadas (no ha ocurrido)";
+    const zs = el("text", { x: m.l + 8, y: y(100) + 16, style: `fill:${c("--line")};font-size:11.5px;font-weight:500` }, svg);
+    zs.textContent = estrecho ? "más sentenciadas" : "Más sentenciadas que procesadas";
+    const tp = el("text", { x: W - m.r - 6, y: y(100) - 5, "text-anchor": "end", style: `fill:${c("--signal")};font-size:11px` }, svg);
+    tp.textContent = estrecho ? "100" : "100 = mismo número";
     const pr = S.map(d => [x(d.i), y(raz(d))]);
-    el("path", { d: `M${pr[0][0]},${y(0)} ` + pr.map(q => `L${q[0]},${q[1]}`).join(" ") + ` L${pr[pr.length - 1][0]},${y(0)} Z`, fill: c("--area") }, svg);
     for (let k = 1; k < S.length; k++) {
       const t13 = S[k].src === "t" || S[k - 1].src === "t";
       el("line", { x1: pr[k - 1][0], y1: pr[k - 1][1], x2: pr[k][0], y2: pr[k][1], stroke: c("--line"), "stroke-width": 2.2,
