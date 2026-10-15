@@ -4,7 +4,7 @@ Base de datos mensual, reproducible y validada, construida a partir del **Cuader
 
 **Pregunta central.** ¿Cómo ha evolucionado el número de **personas procesadas, es decir, privadas de la libertad sin sentencia**? Primero se mira el sexenio de López Obrador comparado con el de Peña Nieto; después, el resto de la historia disponible (2006 a la fecha y, más adelante, desde 2000).
 
-> Estado (2026‑10‑15): **fases 1, 2 y 3 terminadas**. 2006‑01 a 2026‑08 está extraído y validado: 245 de 248 meses. Faltan jun–ago 2019, cuyos PDFs publicados están incompletos. Los sexenios de Calderón y Peña Nieto quedan completos a nivel entidad y centro; 2005 sale, a nivel nacional, de la tabla de 13 meses de los cuadernos de 2006. Ver [§14](#14-bitácora). Las decisiones de diseño están en [§10](#10-registro-de-decisiones).
+> Estado (2026‑10‑15): **fases 1, 2 y 3 terminadas**. 2006‑01 a 2026‑08 está extraído y validado: 245 de 248 meses. Faltan jun–ago 2019, cuyos PDFs publicados están incompletos. Los sexenios de Calderón y Peña Nieto quedan completos a nivel entidad y centro; 2005 sale, a nivel nacional, de la tabla de 13 meses de los cuadernos de 2006. **Fase 5 iniciada:** la serie nacional por fuero y situación jurídica de 2000‑01 a 2005‑01 ya está en `nacional_13m_ocr.csv` (OCR de los cuadernos escaneados de enero de 2001 a 2005). Ver [§14](#14-bitácora). Las decisiones de diseño están en [§10](#10-registro-de-decisiones).
 
 **Gráfica interactiva:** <https://jmtoral.github.io/cuadernos_penitenciarios/> (personas sin sentencia, mensual, 2005–2026; `docs/index.html` lo genera `pagina.py` desde `docs/plantilla.html`).
 
@@ -338,6 +338,7 @@ cuaderno_pen/
 ├── .gitignore              # excluye data/raw/
 ├── descargar.py            # data/enlaces.csv → PDFs + manifiesto
 ├── extraer.py              # PDFs → poblacion/capacidad/nacional_13m/impresos (épocas A, B y C, 2006+)
+├── ocr13.py                # OCR de la tabla de 13 meses, ene‑2001 a ene‑2005 → nacional_13m_ocr.csv
 ├── ckan.py                 # datastore_search → data/raw/ckan/<AAAA-MM>/
 ├── validar.py              # chequeos de §6 → validacion.csv + reporte_validacion.md
 ├── notebooks/
@@ -355,6 +356,7 @@ cuaderno_pen/
         ├── poblacion.csv
         ├── capacidad.csv
         ├── nacional_13m.csv
+        ├── nacional_13m_ocr.csv  # 2000‑01 a 2005‑01, por OCR (mismas columnas)
         ├── impresos.csv    # subtotales/totales impresos, solo para validar
         ├── errores.csv     # meses que el extractor no pudo leer
         ├── validacion.csv
@@ -373,6 +375,7 @@ conda activate cuaderno_pen && python descargar.py && python ckan.py && python e
 
 ```bash
 conda create -n cuaderno_pen -c conda-forge python=3.12 pdfplumber pandas matplotlib requests jupyter
+conda activate cuaderno_pen && pip install rapidocr_onnxruntime   # sólo para ocr13.py
 ```
 
 **Colab:** no hace falta para las fases 1‑4, porque la extracción local tarda minutos. Se reserva para el OCR de 2000‑2005.
@@ -616,6 +619,39 @@ Un perfil de `extraer.py` sobre 2017‑03 mostró que casi todo el tiempo se iba
 
 **Verificación:** cinco rangos (2007‑01 a 06, 2010‑07 a 12, 2012‑03 a 06, 2017‑01 a 06 y 2019‑05 a 09, este último con sus tres errores) son idénticos renglón por renglón a los CSV publicados. No se repitió la corrida completa de 2006‑2026; la próxima que se haga (por ejemplo, con un cuaderno nuevo) debe dar `git diff data/processed` vacío salvo el mes agregado.
 
+### Fase 5, versión mínima: serie nacional 2000‑2005 por OCR
+
+**Fecha:** 2026‑10‑15. **Duración:** ~2 h, casi todo en probar motores de OCR. Una corrida de `ocr13.py` tarda ~5 min (5 páginas).
+
+Se hizo lo mínimo útil de §16: OCR de la tabla de 13 meses de los cuadernos de enero de 2001 a 2005. Esas tablas están en las páginas 9 (2001‑2004) y 7 (2005); en 2001‑2003 vienen acostadas. Cada tabla trae ene del año anterior a ene del año del cuaderno, así que salen 2000‑01 a 2005‑01: 61 meses × 4 combinaciones de fuero y situación jurídica = 244 cifras distintas (260 renglones, porque cada enero intermedio viene en dos cuadernos).
+
+| Intento | Resultado |
+|---|---|
+| Tesseract 5.5 (`spa`), página completa | malo: el sombreado de puntos de las celdas y las líneas de la tabla dan basura |
+| Tesseract con desenfoque + umbral, líneas borradas y sólo dígitos, por franja y por celda | mejor, pero confunde 8 con 3, pierde dígitos y no cuadra ninguna tabla |
+| **RapidOCR** (modelos PaddleOCR en ONNX, CPU), página a ~200 dpi con desenfoque leve | casi perfecto en las cifras normales; los errores se concentran en los incrementos, que vienen en negritas |
+
+Lo que hizo falta además (en `ocr13.py`):
+
+- **Renglones trazados de izquierda a derecha.** El escaneo de 2002 viene combado: con una sola altura por renglón, un renglón se partía en dos.
+- **Limpieza de lecturas:** basura pegada ("14,111.", '"12,913'), y "159.716" se lee como "159,716" (los porcentajes traen dos decimales). El año ("2000") se descarta.
+- **Relectura de celdas.** Si un renglón no cuadra o le falta una cifra, cada celda de conteo se vuelve a leer sola, a 1.5× de resolución. Se acepta la única combinación de lecturas que cuadra; si hay cero o varias, el cuaderno falla.
+
+**Validación:**
+
+| chequeo | resultado |
+|---|---|
+| procesados + sentenciados = subtotal (cada fuero), común + federal = total, en los 65 renglones | 65 de 65 |
+| eneros repetidos en dos cuadernos (2001‑01 a 2004‑01), leídos de escaneos distintos | 16 de 16 cifras idénticas |
+| 2005‑01 contra la tabla de 13 meses de ene‑2006 (con texto) | 4 de 4 cifras idénticas |
+| incremento absoluto impreso = diferencia entre renglones | 21 avisos de 420; todos en celdas en negritas mal leídas (por ejemplo "856-" por -938). Las sumas ya confirman los conteos, así que sólo se avisa |
+
+**Pendiente:**
+
+- La gráfica y la página aún no usan `nacional_13m_ocr.csv`; la serie nacional que muestran empieza en 2005.
+- Tablas por entidad y por centro de 2000‑2005 (resto de §16), con el mismo método.
+- Tesseract y `pytesseract` quedaron instalados en el env, aunque ya no se usan.
+
 ---
 
 ## 15. Diferencias con los censos de INEGI
@@ -661,7 +697,7 @@ INEGI publica la cifra sin sentencia con detalle a partir del cierre de 2023. An
 
 ## 16. PDFs escaneados (2000–2005): estado y plan
 
-> **Estado (2026‑10‑14): no procesados.** Ninguna cifra de 2000‑2005 está en `data/processed/`. Esta sección documenta lo que se sabe de esos archivos y cómo se piensa extraerlos (fase 5).
+> **Estado (2026‑10‑15): versión mínima hecha.** La serie nacional por fuero y situación jurídica de 2000‑01 a 2005‑01 está en `data/processed/nacional_13m_ocr.csv` (`ocr13.py`, ver la bitácora en §14). Las tablas por entidad y por centro de 2000‑2005 siguen sin procesar. Esta sección documenta lo que se sabe de esos archivos y cómo se piensa extraerlos.
 
 ### Qué son
 
