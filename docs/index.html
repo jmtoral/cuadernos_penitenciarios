@@ -767,7 +767,7 @@ function dibujar3() {
     const v = f(xl);
     el("circle", { cx: x(xl.i), cy: y(v), r: 4.5, fill: c(col), stroke: c("--panel"), "stroke-width": 2 }, svg);
     if (!estrecho) {
-      const t = el("text", { x: x(xl.i) + 9, y: y(v) + 4, style: `fill:${c("--ink")};font-size:12px` }, svg);
+      const t = el("text", { x: x(xl.i) + 9, y: y(v) + (TOT && v === xl.mp ? -10 : 4), style: `fill:${c("--ink")};font-size:12px` }, svg);
       t.textContent = TOT ? (v === xl.mp ? `${fmt(v)} mujeres` : `${fmt(v)} en total`) : sxModo === "pct" ? v.toFixed(1) + " %" : sxModo === "muj" ? fmt(v) : v.toFixed(0);
     }
   });
