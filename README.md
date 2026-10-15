@@ -625,5 +625,5 @@ Cómo se verificó: se contaron los caracteres extraídos con `pdftotext` y con 
    Un mes que no cuadra se revisa contra la imagen, y la corrección se anota en un archivo de correcciones manuales con la página y el motivo. Nunca se edita el CSV a mano.
 4. **Empalme 2005–2006.** El cuaderno de ene‑2006 (con texto) trae en su tabla de 13 meses los meses de 2005, así que sirve de prueba directa para el OCR de todo 2005.
 
-Lo mínimo útil, si se quiere solo el total nacional: hacer OCR **solo de la tabla de 13 meses de los cuadernos de enero** (2001‑2006). Son 6 páginas, que dan 2000‑2005 completos a nivel nacional por fuero y situación jurídica.
+Lo mínimo útil, si se quiere solo el total nacional: hacer OCR **solo de la tabla de 13 meses de los cuadernos de enero de 2001 a 2005** (5 páginas escaneadas) y leer la de enero de 2006, que trae texto. Con eso quedan 2000‑2005 completos a nivel nacional por fuero y situación jurídica.
 
