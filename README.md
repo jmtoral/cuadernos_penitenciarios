@@ -29,6 +29,7 @@ Base de datos mensual, reproducible y validada, construida a partir del **Cuader
 13. [Glosario](#13-glosario)
 14. [Bitácora](#14-bitácora)
 15. [Diferencias con los censos de INEGI](#15-diferencias-con-los-censos-de-inegi)
+16. [PDFs escaneados (2000–2005): estado y plan](#16-pdfs-escaneados-20002005-estado-y-plan)
 
 ---
 
@@ -587,4 +588,42 @@ INEGI publica la cifra sin sentencia con detalle a partir del cierre de 2023. An
 
 - **Los conceptos no son iguales.** INEGI separa "sin sentencia", "sentencia no definitiva" y "sentencia definitiva". En 2023 hubo 17,202 personas con sentencia no definitiva, que INEGI cuenta del lado *con sentencia*. El Cuaderno solo distingue procesadas y sentenciadas. Aun así, las dos cifras de "sin sentencia" quedan a menos de 1 % de distancia, lo que sugiere que el Cuaderno también clasifica como sentenciada a quien tiene una sentencia no definitiva.
 - **Ciudad de México pesa en 2025.** El salto de INEGI de 36.3 % a 42.2 % entre 2024 y 2025 se da *sin* los adultos de Ciudad de México, que en el Cuaderno tienen una proporción de procesados (30 %) más baja que el promedio. La serie del Cuaderno no tiene ese hueco, así que es la mejor base para ver la tendencia nacional de 2025–2026.
+
+---
+
+## 16. PDFs escaneados (2000–2005): estado y plan
+
+> **Estado (2026‑10‑14): no procesados.** Ninguna cifra de 2000‑2005 está en `data/processed/`. Esta sección documenta lo que se sabe de esos archivos y cómo se piensa extraerlos (fase 5).
+
+### Qué son
+
+| Dato | Valor |
+|---|---|
+| PDFs | 71: ene‑2000 a dic‑2005, sin dic‑2003, cuya liga en gob.mx apunta por error al cuaderno de dic‑2023 |
+| Páginas | 3,457 en total (43–53 por cuaderno) |
+| Capa de texto | **ninguna**: `pdftotext` y pdfplumber devuelven 0 caracteres en los 71 |
+| Contenido de cada página | una sola imagen escaneada de 1696 × 2176 px (≈ 200 dpi en carta) |
+| Orientación | cambia: 2000 viene vertical; dic‑2005, horizontal (2176 × 1696) |
+
+Cómo se verificó: se contaron los caracteres extraídos con `pdftotext` y con pdfplumber (las primeras tres páginas de cada uno de los 71 PDFs) y se inspeccionaron las imágenes de la primera página con pdfplumber (`page.images`). En 2006‑01, en cambio, `pdftotext` extrae unos 59 mil caracteres.
+
+### Por qué no se ha hecho
+
+- No hace falta para la pregunta central (sexenios de Peña Nieto, López Obrador y Sheinbaum), que se cubre con 2013 en adelante. La serie nacional ya llega hasta 2013 gracias a la tabla de 13 meses de ene‑2014.
+- Es lo más caro del proyecto: OCR de unas 3,500 páginas de tablas numéricas, donde un dígito mal leído cambia la cifra sin que se note.
+- Va después de la época A (2006‑2013, con texto), porque la serie de 2006 en adelante sirve para validar el empalme con 2005.
+
+### Plan (fase 5)
+
+1. **Localizar las páginas útiles antes de hacer OCR.** Por cuaderno solo se necesitan 2 o 3 páginas: la tabla por entidad según fuero, situación jurídica y sexo, la tabla de 13 meses y, si existe, la de capacidad. Se ubican con OCR rápido de los títulos (franja superior de cada página) y se procesa a fondo solo esa página.
+2. **OCR por tabla, no por página corrida.** Se rota según la orientación y se binariza la imagen. Las celdas se reconocen con un motor que respete la estructura de tabla (Tesseract con `--psm 6` y lista blanca de dígitos y comas, o un modelo de visión que lea tablas). Aquí sí conviene Colab con GPU (decisión D9 y §9).
+3. **La validación hace de corrector.** Se aplican los mismos chequeos de §6:
+   - hombres + mujeres = subtotal;
+   - suma de entidades = total nacional;
+   - total nacional = tabla de 13 meses del cuaderno siguiente, que además da cada mes dos veces.
+
+   Un mes que no cuadra se revisa contra la imagen, y la corrección se anota en un archivo de correcciones manuales con la página y el motivo. Nunca se edita el CSV a mano.
+4. **Empalme 2005–2006.** El cuaderno de ene‑2006 (con texto) trae en su tabla de 13 meses los meses de 2005, así que sirve de prueba directa para el OCR de todo 2005.
+
+Lo mínimo útil, si se quiere solo el total nacional: hacer OCR **solo de la tabla de 13 meses de los cuadernos de enero** (2001‑2006). Son 6 páginas, que dan 2000‑2005 completos a nivel nacional por fuero y situación jurídica.
 
