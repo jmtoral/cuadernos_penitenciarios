@@ -30,6 +30,7 @@ Base de datos mensual, reproducible y validada, construida a partir del **Cuader
 14. [Bitácora](#14-bitácora)
 15. [Diferencias con los censos de INEGI](#15-diferencias-con-los-censos-de-inegi)
 16. [PDFs escaneados (2000–2005): estado y plan](#16-pdfs-escaneados-20002005-estado-y-plan)
+17. [Validación externa con Intersecta y la pista de 1991–1999](#17-validación-externa-con-intersecta-y-la-pista-de-19911999)
 
 ---
 
@@ -693,4 +694,53 @@ Cómo se verificó: se contaron los caracteres extraídos con `pdftotext` y con 
 4. **Empalme 2005–2006.** El cuaderno de ene‑2006 (con texto) trae en su tabla de 13 meses los meses de 2005, así que sirve de prueba directa para el OCR de todo 2005.
 
 Lo mínimo útil, si se quiere solo el total nacional: hacer OCR **solo de la tabla de 13 meses de los cuadernos de enero de 2001 a 2005** (5 páginas escaneadas) y leer la de enero de 2006, que trae texto. Con eso quedan 2000‑2005 completos a nivel nacional por fuero y situación jurídica.
+
+---
+
+## 17. Validación externa con Intersecta y la pista de 1991–1999
+
+**Fuente:** Intersecta, *Con juicio o prejuicio. La prisión preventiva oficiosa en México*, septiembre de 2022 ([intersecta.org](https://www.intersecta.org)). Las gráficas de las páginas 4 y 5 dan, por año de 1991 a 2022, el **promedio anual** de personas privadas de la libertad y el porcentaje en prisión preventiva. El pie dice: "Fuente: Cuaderno mensual de información estadística penitenciaria nacional. El análisis está basado en el promedio anual de personas privadas de la libertad. Para 2022, se incluye el promedio de personas que estuvieron privadas de la libertad entre enero y junio."
+
+Es un procesamiento independiente de la misma fuente, así que sirve para comprobar la extracción: si las dos cuentas parten de los mismos PDFs, los promedios deben coincidir.
+
+### Comparación (promedio anual de la población total)
+
+Se promediaron los meses de la tabla por entidad de cada año; en 2022, solo enero a junio, como Intersecta.
+
+| Año | Este proyecto | Intersecta | Diferencia | % sin sentencia aquí | Intersecta |
+|---|---|---|---|---|---|
+| 2006 | 212,254 | 212,226 | +28 | 42.9 | 43 |
+| 2007 | 216,087 | 216,087 | 0 | 42.5 | 43 |
+| 2008 | 218,972 | 218,972 | 0 | 41.0 | 41 |
+| 2009 | 226,890 | 226,890 | 0 | 41.3 | 41 |
+| 2010 | 224,294 | 224,394 | −100 | 41.8 | 42 |
+| 2011 | 227,206 | 227,205 | +1 | 43.2 | 43 |
+| 2012 | 237,594 | 237,594 | 0 | 42.0 | 42 |
+| 2013 | 246,071 | 246,071 | 0 | 42.2 | 42 |
+| 2014 | 254,572 | 254,372 | +200 | 42.8 | 43 |
+| 2015 | 254,323 | 254,323 | 0 | 42.1 | 42 |
+| 2016 | 234,250 | 234,259 | −9 | 39.5 | 40 |
+| 2017 | 210,214 | 210,274 | −60 | 38.1 | 38 |
+| 2018 | 202,621 | 203,621 | −1,000 | 38.7 | 39 |
+| 2019 | 200,438 | 200,705 | −267 | 38.1 | 38 |
+| 2020 | 210,202 | 210,202 | 0 | 40.2 | 40 |
+| 2021 | 220,717 | 220,717 | 0 | 42.6 | 43 |
+| 2022 (ene–jun) | 225,648 | 225,628 | +20 | 41.3 | 41 |
+
+**Lectura:**
+- **8 de 17 años coinciden exacto** y otros 4 difieren en menos de 30 personas. El porcentaje sin sentencia coincide en todos los años una vez redondeado. Es una confirmación externa fuerte de que la extracción es correcta.
+- **2019 (−267):** aquí el promedio usa 9 meses, porque jun–ago 2019 no tienen tabla por entidad (PDFs incompletos, §14). Intersecta probablemente tuvo esos meses por otra vía, o los completó de otra forma. Es una pista más de que existen versiones completas de esos cuadernos.
+- **2018 (−1,000) y 2014 (+200):** las diferencias son números redondos, lo que sugiere una cifra mal capturada en un mes por alguna de las dos partes y no un error sistemático. Hay que revisarlos mes por mes contra los PDFs.
+- **2010 (−100), 2017 (−60), 2006 (+28):** son diferencias chicas. Las posibles causas son una revisión de cifras o un mes leído de un cuaderno distinto.
+
+### La pista de 1991–1999
+
+- **El Cuaderno existía antes de 2000.** Intersecta tiene promedios anuales desde **1991** y dice que la fuente es el Cuaderno mensual. El archivo de gob.mx empieza en enero de 2000, así que Intersecta obtuvo los cuadernos de 1991–1999 por otra vía (¿solicitud de transparencia? ¿archivo físico?). La guía no lo dice.
+- Sus cifras de los noventa: población de **92,137 en 1991** a 181,175 en 2003 (un poco menos del doble), y sin sentencia de **56 % en 1991**, que baja a 43 % hacia 1998.
+- **Los años 80 no están en la serie.** La guía solo cita un dato suelto: un estudio de 1981 del Instituto Latinoamericano de las Naciones Unidas para la Prevención del Delito (ILANUD) que estimó **61 %** de personas en prisión preventiva en México. Lo toma de segunda mano, de un artículo de Rodolfo González Espinosa en *Nexos* (12/05/2020).
+
+**Siguientes pasos posibles:**
+1. Preguntar a Intersecta de dónde sacaron los cuadernos de 1991–1999 y si los comparten.
+2. Pedir por solicitud de transparencia (PNT) a Prevención y Reinserción Social los cuadernos de 1991–1999 y las versiones completas de jun–ago 2019.
+3. Mientras tanto, los promedios anuales de Intersecta de 1991–1999 pueden usarse como **referencia externa marcada como tal**, nunca mezclados con la serie mensual extraída.
 
