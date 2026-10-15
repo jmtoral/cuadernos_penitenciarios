@@ -35,7 +35,7 @@
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 body { background: var(--bg); color: var(--ink); font: 400 15px/1.55 var(--body); }
-.wrap { max-width: 1080px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 56px; display: grid; gap: 28px; }
+.wrap { max-width: 1320px; margin: 0 auto; padding-inline: 20px; padding-block: 36px 56px; display: grid; gap: 28px; }
 header { display: grid; gap: 10px; max-width: 70ch; }
 .cabeza { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
 #tema { font: 500 12.5px/1 var(--body); color: var(--ink-2); background: var(--panel); border: 1px solid var(--rule); border-radius: 999px; padding: 7px 12px; cursor: pointer; }
@@ -87,9 +87,19 @@ svg .hito-n { font-family: var(--mono); font-weight: 500; fill: var(--panel); fo
 .cifra .v { font: 700 28px/1.1 var(--display); font-variant-numeric: tabular-nums; }
 .cifra .v.up { color: var(--signal); }
 .cifra .s { color: var(--ink-2); font-size: 13px; }
-.hitos { display: grid; gap: 10px; }
+/* gráficas a la izquierda, hitos en una columna lateral que se queda fija al hacer scroll */
+.cuerpo { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 24px; align-items: start; }
+.graficas { display: grid; gap: 28px; min-width: 0; }
+.hitos { display: grid; gap: 12px; position: sticky; top: calc(env(safe-area-inset-top, 0px) + 16px);
+  max-height: calc(100vh - 32px); overflow-y: auto; background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 16px; }
+.hitos p.sub { margin: 0; color: var(--ink-3); font-size: 12.5px; }
+@media (max-width: 960px) {
+  .cuerpo { grid-template-columns: minmax(0, 1fr); }
+  .hitos { position: static; max-height: none; }
+  .hitos ol { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+}
 .hitos h2, .notas h2 { font: 700 17px/1.2 var(--display); margin: 0; }
-.hitos ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px 24px; }
+.hitos ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr; gap: 12px 24px; }
 .hitos li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start; font-size: 14px; }
 .hitos li b { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--ink-2); color: var(--panel); font: 500 11px/1 var(--mono); }
 .hitos li span { color: var(--ink-2); }
@@ -121,6 +131,8 @@ a { color: var(--line); }
     <p class="lede" id="lede">Personas privadas de la libertad en situación jurídica de <em>procesadas</em>, fuero común y federal sumados, al cierre de cada mes. La cifra más alta de la serie es la del último mes publicado.</p>
   </header>
 
+  <div class="cuerpo">
+  <div class="graficas">
   <section class="lamina" aria-labelledby="t-graf">
     <div class="lamina-top">
       <h2 id="t-graf">Población procesada total, mensual</h2>
@@ -172,10 +184,13 @@ a { color: var(--line); }
     <p class="lamina-nota" id="nota-sobre"></p>
   </section>
 
-  <section class="hitos">
-    <h2>Hitos marcados en la gráfica</h2>
+  </div>
+  <aside class="hitos" aria-labelledby="t-hitos">
+    <h2 id="t-hitos">Hitos</h2>
+    <p class="sub">El número es la marca sobre la gráfica.</p>
     <ol id="hitos"></ol>
-  </section>
+  </aside>
+  </div>
 
   <section class="notas">
     <h2>Fuente y notas</h2>
