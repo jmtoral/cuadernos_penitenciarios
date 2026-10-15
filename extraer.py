@@ -10,18 +10,29 @@ Método: pdfplumber da palabras con coordenadas; las cifras están alineadas a l
 así que las columnas se obtienen agrupando el borde derecho (x1) de todas las cifras de la
 tabla. Si no sale el número de columnas esperado, la tabla falla en voz alta.
 
-Uso: python extraer.py [AAAA-MM_desde] [AAAA-MM_hasta]
+Velocidad: pdfminer tarda ~0.7 s en interpretar cada página, y leer el título obliga a interpretarla
+entera (recortar la franja superior no lo evita). pypdfium2 (dependencia de pdfplumber) saca el texto de
+todas las páginas en ~1 s; sólo las páginas cuyo texto completo trae las claves pasan a pdfplumber. Los
+PDFs se procesan en paralelo y cada mes se guarda en data/raw/cache/, con llave sha256 del PDF + hash de
+este archivo.
+
+Uso: python extraer.py [AAAA-MM_desde] [AAAA-MM_hasta] [--sin-cache]
 """
 import csv
+import hashlib
+import pickle
 import re
 import sys
 import unicodedata
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import pdfplumber
+import pypdfium2
 
 RAIZ = Path(__file__).parent
 SALIDA = RAIZ / "data/processed"
+CACHE = RAIZ / "data/raw/cache"
 MESES = ["ENERO", "FEBRERO", "MARZO", "ABRIL", "MAYO", "JUNIO", "JULIO", "AGOSTO",
          "SEPTIEMBRE", "OCTUBRE", "NOVIEMBRE", "DICIEMBRE"]
 NUM = re.compile(r"^-?[\d,]+(\.\d+)?%?$")
@@ -206,8 +217,15 @@ def sin_etiqueta_derecha(pag):
 
 
 def paginas_con(pdf, *claves, sin=(), con_periodo=True):
-    """Páginas de tabla cuyo título tiene las claves; el índice queda fuera porque no trae "MES AAAA"."""
-    return [p for p in pdf.pages if all(k in titulo(p) for k in claves) and not any(k in titulo(p) for k in sin)
+    """Páginas de tabla cuyo título tiene las claves; el índice queda fuera porque no trae "MES AAAA".
+
+    pdf.rapido: texto de cada página según pypdfium2, sin espacios; si no trae las claves en ningún lado,
+    tampoco las trae en el título y la página no se interpreta con pdfplumber.
+    """
+    rapido = getattr(pdf, "rapido", None)
+    return [p for i, p in enumerate(pdf.pages)
+            if (rapido is None or all(k.replace(" ", "") in rapido[i] for k in claves))
+            and all(k in titulo(p) for k in claves) and not any(k in titulo(p) for k in sin)
             and (periodo_impreso(p) or not con_periodo)]
 
 
@@ -373,32 +391,52 @@ CAMPOS = {
 }
 
 
-def main(desde="2006-01", hasta="9999-99"):
+def extraer_mes(m):
+    """Un mes del manifiesto: (texto para la consola, {salida: filas}). Corre en un proceso aparte."""
+    meta = {"periodo": m["periodo"], "archivo": m["archivo"], "url": m["url"]}
+    tmp = {k: [] for k in CAMPOS}
+    ruta = RAIZ / "data/raw/pdf" / m["archivo"]
+    try:
+        with pdfplumber.open(ruta) as pdf:
+            doc = pypdfium2.PdfDocument(ruta)
+            pdf.rapido = [norm(p.get_textpage().get_text_range()).replace(" ", "") for p in doc]
+            doc.close()
+            impreso = periodo_impreso(paginas_con(pdf, "SEGUN FUERO, SITUACION JURIDICA Y SEXO")[0])
+            if impreso != m["periodo"]:
+                raise ValueError(f"el PDF dice {impreso}, el manifiesto {m['periodo']}")
+            tabla_entidad(pdf, m["periodo"], meta, tmp["poblacion"], tmp["impresos"])
+            tabla_centro(pdf, m["periodo"], meta, tmp["poblacion"], tmp["capacidad"], tmp["impresos"])
+            try:  # la tabla de 13 meses es testigo: si falla, el mes conserva sus otras tablas
+                tabla_13m(pdf, m["periodo"], meta, tmp["nacional_13m"])
+            except Exception as e:
+                tmp["nacional_13m"] = []
+                tmp["errores"].append({**meta, "error": str(e)})
+        return "ok", tmp
+    except Exception as e:  # el mes queda registrado como error; no se descarta en silencio
+        return f"ERROR {e}", {**{k: [] for k in CAMPOS}, "errores": [{**meta, "error": str(e)}]}
+
+
+def extraer_mes_cache(m, version, usar_cache):
+    ruta = CACHE / f"{m['periodo']}_{m['sha256'][:16]}_{version}.pkl"
+    if usar_cache and ruta.exists():
+        return pickle.loads(ruta.read_bytes())
+    resultado = extraer_mes(m)
+    CACHE.mkdir(parents=True, exist_ok=True)
+    ruta.write_bytes(pickle.dumps(resultado))
+    return resultado
+
+
+def main(desde="2006-01", hasta="9999-99", usar_cache=True):
+    version = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()[:16]
+    meses = [m for m in csv.DictReader(open(RAIZ / "data/raw/manifiesto.csv", encoding="utf-8"))
+             if desde <= m["periodo"] <= hasta]
     salidas = {k: [] for k in CAMPOS}
-    for m in csv.DictReader(open(RAIZ / "data/raw/manifiesto.csv", encoding="utf-8")):
-        if not desde <= m["periodo"] <= hasta:
-            continue
-        meta = {"periodo": m["periodo"], "archivo": m["archivo"], "url": m["url"]}
-        print(m["periodo"], end=" ", flush=True)
-        try:
-            with pdfplumber.open(RAIZ / "data/raw/pdf" / m["archivo"]) as pdf:
-                impreso = periodo_impreso(paginas_con(pdf, "SEGUN FUERO, SITUACION JURIDICA Y SEXO")[0])
-                if impreso != m["periodo"]:
-                    raise ValueError(f"el PDF dice {impreso}, el manifiesto {m['periodo']}")
-                tmp = {k: [] for k in CAMPOS}
-                tabla_entidad(pdf, m["periodo"], meta, tmp["poblacion"], tmp["impresos"])
-                tabla_centro(pdf, m["periodo"], meta, tmp["poblacion"], tmp["capacidad"], tmp["impresos"])
-                try:  # la tabla de 13 meses es testigo: si falla, el mes conserva sus otras tablas
-                    tabla_13m(pdf, m["periodo"], meta, tmp["nacional_13m"])
-                except Exception as e:
-                    tmp["nacional_13m"] = []
-                    salidas["errores"].append({**meta, "error": str(e)})
+    with ProcessPoolExecutor() as ex:  # map conserva el orden del manifiesto: los CSV no dependen del paralelismo
+        for m, (estado, tmp) in zip(meses, ex.map(extraer_mes_cache, meses, [version] * len(meses),
+                                                   [usar_cache] * len(meses))):
+            print(m["periodo"], estado, flush=True)
             for k in tmp:
                 salidas[k] += tmp[k]
-            print("ok")
-        except Exception as e:  # el mes queda registrado como error; no se descarta en silencio
-            print("ERROR", e)
-            salidas["errores"].append({**meta, "error": str(e)})
     SALIDA.mkdir(parents=True, exist_ok=True)
     for nombre, filas in salidas.items():
         with open(SALIDA / f"{nombre}.csv", "w", encoding="utf-8", newline="") as f:
@@ -409,4 +447,5 @@ def main(desde="2006-01", hasta="9999-99"):
 
 
 if __name__ == "__main__":
-    main(*sys.argv[1:])
+    args = [a for a in sys.argv[1:] if a != "--sin-cache"]
+    main(*args, usar_cache="--sin-cache" not in sys.argv)

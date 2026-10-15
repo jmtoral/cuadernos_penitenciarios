@@ -597,6 +597,24 @@ Para la base de Peña Nieto (dic‑2012 a nov‑2018) se necesitan las épocas A
 - **Corrección de paso en `FEDERAL`:** el patrón tenía un carácter de control (retroceso) en lugar de `` tras `CPS`. Se corrigió; 2014‑2026 no cambia.
 - **Tamaño:** `poblacion.csv` pasa de 49 a 86 MB e `impresos.csv` de 40 a 69 MB. GitHub avisa arriba de 50 MB y rechaza arriba de 100 MB, así que la fase 5 (2000‑2005) ya no cabe sin comprimir o partir esos archivos.
 
+### Velocidad del extractor
+
+**Fecha:** 2026‑10‑15.
+
+Un perfil de `extraer.py` sobre 2017‑03 mostró que casi todo el tiempo se iba en que pdfminer interpreta cada página completa (~0.7 s por página, 60 páginas) solo para leer su título. Recortar la franja superior no lo evita, porque la página se interpreta entera de todos modos. Se hicieron tres cambios:
+
+- **Prefiltro con pypdfium2** (ya venía como dependencia de pdfplumber). Saca el texto de todas las páginas en ~1 s, y solo las páginas cuyo texto trae las claves del título pasan a pdfplumber.
+- **PDFs en paralelo** (`ProcessPoolExecutor`, un proceso por núcleo). Los resultados se juntan en el orden del manifiesto.
+- **Caché por mes** en `data/raw/cache/`. La llave es el sha256 del PDF más un hash de `extraer.py`; cualquier cambio al extractor invalida todo el caché. `--sin-cache` lo ignora.
+
+| Corrida | Antes | Después |
+|---|---|---|
+| 1 mes (2017‑03) | 43 s | — |
+| 6 meses (2017‑01 a 2017‑06), sin caché | ~4 min 20 s (estimado: 6 × 43 s) | 34 s |
+| los mismos 6 meses, con caché | — | 3 s |
+
+**Verificación:** cinco rangos (2007‑01 a 06, 2010‑07 a 12, 2012‑03 a 06, 2017‑01 a 06 y 2019‑05 a 09, este último con sus tres errores) son idénticos renglón por renglón a los CSV publicados. No se repitió la corrida completa de 2006‑2026; la próxima que se haga (por ejemplo, con un cuaderno nuevo) debe dar `git diff data/processed` vacío salvo el mes agregado.
+
 ---
 
 ## 15. Diferencias con los censos de INEGI
