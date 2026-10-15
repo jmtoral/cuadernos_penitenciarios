@@ -114,7 +114,7 @@ a { color: var(--line); }
 <div class="wrap">
   <header>
     <div class="cabeza">
-      <div class="eyebrow">Cuaderno Mensual de Información Estadística Penitenciaria Nacional · 2016–2026</div>
+      <div class="eyebrow" id="ceja">Cuaderno Mensual de Información Estadística Penitenciaria Nacional</div>
       <button id="tema" type="button" aria-pressed="false">Tema oscuro</button>
     </div>
     <h1><span class="n" id="h-total">121,337</span> personas presas sin sentencia</h1>
@@ -153,7 +153,7 @@ a { color: var(--line); }
         <span><i class="a h"></i>jun–ago 2019: el PDF publicado no trae tablas</span>
       </div>
     </div>
-    <div id="graf" role="img" aria-label="Gráfica de línea del total de personas procesadas por mes, de enero de 2016 a agosto de 2026"></div>
+    <div id="graf" role="img" aria-label="Gráfica de línea del total de personas procesadas por mes"></div>
   </section>
 
   <section class="cifras" id="cifras" aria-label="Cifras clave"></section>
@@ -168,7 +168,7 @@ a { color: var(--line); }
         <span><i class="a h"></i>jun–ago 2019: sin datos por centro (PDF sin tablas)</span>
       </div>
     </div>
-    <div id="graf2" role="img" aria-label="Gráfica de población penitenciaria total, espacios y personas por encima de la capacidad por centro, mensual desde 2017"></div>
+    <div id="graf2" role="img" aria-label="Gráfica de población penitenciaria total, espacios y personas por encima de la capacidad por centro, mensual"></div>
     <p class="lamina-nota" id="nota-sobre"></p>
   </section>
 
@@ -179,8 +179,8 @@ a { color: var(--line); }
 
   <section class="notas">
     <h2>Fuente y notas</h2>
-    <p>SSPC, Prevención y Reinserción Social: Cuaderno Mensual de Información Estadística Penitenciaria Nacional (PDF). Desde 2017 la cifra sale de la tabla por entidad del cuaderno de cada mes y está validada contra los totales impresos, la suma por centro y los datos abiertos de datos.gob.mx (2025–2026).</p>
-    <p>Sobrepoblación: espacios y población de la tabla por centro del Cuaderno, disponible desde 2017. "Por encima de la capacidad, centro por centro" suma la diferencia entre personas y espacios solo en los centros que tienen más personas que espacios; los centros con lugares libres no restan.</p>
+    <p>SSPC, Prevención y Reinserción Social: Cuaderno Mensual de Información Estadística Penitenciaria Nacional (PDF). Desde enero de 2014 la cifra sale de la tabla por entidad del cuaderno de cada mes y está validada contra los totales impresos, la suma por centro y los datos abiertos de datos.gob.mx (2025–2026).</p>
+    <p>Sobrepoblación: capacidad (2014–2016) o espacios (desde 2017) y población de la tabla por centro del Cuaderno, disponible desde 2014. "Por encima de la capacidad, centro por centro" suma la diferencia entre personas y espacios solo en los centros que tienen más personas que espacios; los centros con lugares libres no restan.</p>
     <div class="faltan">
       <h3>Tres cuadernos de 2019 están incompletos</h3>
       <p>Los PDF de junio, julio y agosto de 2019 publicados en gob.mx tienen una o dos páginas y ninguna tabla:</p>
@@ -191,11 +191,11 @@ a { color: var(--line); }
       </ul>
       <p>El total nacional por fuero de esos meses sale de la tabla de 13 meses de cuadernos posteriores. El desglose por entidad y por centro, y por lo tanto la sobrepoblación, no existe para esos tres meses.</p>
     </div>
-    <p>2016 también viene de la tabla de 13 meses (el primer cuaderno extraído es el de enero de 2017). El cuaderno de diciembre de 2017 revisó a la baja el fuero federal de enero a marzo de 2017; aquí se usa la cifra publicada en el cuaderno de cada mes.</p>
+    <p>2013 viene de la tabla de 13 meses del cuaderno de enero de 2014, el primero extraído. El cuaderno de diciembre de 2017 revisó a la baja el fuero federal de enero a marzo de 2017; aquí se usa la cifra publicada en el cuaderno de cada mes.</p>
     <p>Datos y código: <a href="https://github.com/jmtoral/cuadernos_penitenciarios" target="_blank" rel="noopener">github.com/jmtoral/cuadernos_penitenciarios</a></p>
     <details>
       <summary>Ver la serie completa en tabla</summary>
-      <p class="nota-tabla">* Mes tomado de la tabla de comportamiento de 13 meses de un cuaderno posterior: 2016 completo y junio a agosto de 2019. Es el mismo tramo que aparece punteado en la gráfica.</p>
+      <p class="nota-tabla">* Mes tomado de la tabla de comportamiento de 13 meses de un cuaderno posterior: 2013 completo y junio a agosto de 2019. Es el mismo tramo que aparece punteado en la gráfica.</p>
       <div class="tabla"><table id="tabla"><thead><tr><th>Mes</th><th>Fuero común</th><th>Fuero federal</th><th>Total sin sentencia</th><th>% de la población</th></tr></thead><tbody></tbody></table></div>
     </details>
   </section>
@@ -222,6 +222,9 @@ const corto = p => { const [y, m] = p.split("-").map(Number); return `${MESES[m 
 const S = DATA.map(([p, c, f, pob, src]) => ({ p, i: idx(p), c, f, t: c + f, pob, src }));
 const byP = Object.fromEntries(S.map(d => [d.p, d]));
 const last = S[S.length - 1];
+// años del eje: del primer enero de la serie al año del último mes
+const A0 = Number(S[0].p.slice(0, 4)) + (S[0].p.endsWith("-01") ? 0 : 1), A1 = Number(last.p.slice(0, 4));
+document.getElementById("ceja").textContent += ` · ${S[0].p.slice(0, 4)}–${A1}`;
 
 // encabezado
 document.getElementById("h-total").textContent = fmt(last.t);
@@ -237,7 +240,7 @@ const cifras = [
   ["Último mes", fmt(last.t), `${nombre(last.p)} · ${(last.t / last.pob * 100).toFixed(1)} % de toda la población penitenciaria`, true],
   ["Con López Obrador", sgn(amlo1.t - amlo0.t), `${fmt(amlo0.t)} en dic 2018 → ${fmt(amlo1.t)} en sep 2024 (${sgnP(pct(amlo0.t, amlo1.t))}) en ${amlo1.i - amlo0.i} meses`],
   ["Con Sheinbaum", sgn(last.t - sh0.t), `${fmt(sh0.t)} en oct 2024 → ${fmt(last.t)} en ${corto(last.p)} (${sgnP(pct(sh0.t, last.t))}) en ${mesesSh} meses`, true],
-  ["Punto más bajo", fmt(minD.t), `${nombre(minD.p)}, primer mes del sexenio de López Obrador`]
+  ["Punto más bajo", fmt(minD.t), minD.p === "2018-12" ? `${nombre(minD.p)}, primer mes del sexenio de López Obrador` : nombre(minD.p)]
 ];
 document.getElementById("cifras").innerHTML = cifras.map(([k, v, s, up]) =>
   `<div class="cifra"><div class="k">${k}</div><div class="v${up ? " up" : ""}">${v}</div><div class="s">${s}</div></div>`).join("");
@@ -331,7 +334,7 @@ function dibujar() {
     t.textContent = RAZ ? String(v) : VAR ? (v === 0 ? "0" : (v > 0 ? "+" : "−") + Math.abs(v) + " %") : v === 0 ? "0" : (v / 1000) + " mil";
   }
   // eje x: años
-  for (let a = 2016; a <= 2026; a++) {
+  for (let a = A0; a <= A1; a++) {
     const xi = x(idx(`${a}-01`));
     if (estrecho && a % 2) continue;
     el("line", { x1: xi, x2: xi, y1: H - m.b, y2: H - m.b + 5, stroke: c("--ink-3") }, svg);
@@ -357,7 +360,7 @@ function dibujar() {
         fill: d.v > 0 ? c("--signal") : c("--line"), opacity: d.src === "t" ? .55 : 1 }, svg);
     });
     const t0 = el("text", { x: (x(i0) + x(i0 + 11)) / 2, y: y(0) - 8, "text-anchor": "middle" }, svg);
-    t0.textContent = estrecho ? "" : "2016: sin año previo";
+    t0.textContent = estrecho ? "" : "sin año previo";
     const tl = el("text", estrecho ? { x: x(last.i) - 4, y: y(last.v) - 8, "text-anchor": "end", style: `fill:${c("--ink")};font-size:12px` }
       : { x: x(last.i) + 8, y: y(last.v) + 4, "text-anchor": "start", style: `fill:${c("--ink")};font-size:12px` }, svg);
     tl.textContent = pctFmt(last.v);
@@ -493,7 +496,7 @@ btnTema.addEventListener("click", () => {
   try { localStorage.setItem("tema", oscuro ? "oscuro" : "claro"); } catch (e) {}
 });
 
-// sobrepoblación (desde 2017; el Cuaderno trae espacios por centro)
+// sobrepoblación (el Cuaderno trae capacidad o espacios por centro desde 2014)
 const B = SOBRE.map(([p, esp, pob, exc, n, tot]) => ({ p, i: idx(p), esp, pob, exc, n, tot }));
 const bl = B[B.length - 1];
 document.getElementById("nota-sobre").innerHTML =
@@ -522,7 +525,7 @@ function dibujar2() {
     const t = el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg);
     t.textContent = v === 0 ? "0" : (v / 1000) + " mil";
   }
-  for (let a = 2016; a <= 2026; a++) {
+  for (let a = A0; a <= A1; a++) {
     if (estrecho && a % 2) continue;
     const xi = x(idx(`${a}-01`));
     el("line", { x1: xi, x2: xi, y1: H - m.b, y2: H - m.b + 5, stroke: c("--ink-3") }, svg);
@@ -530,8 +533,10 @@ function dibujar2() {
     t.textContent = a;
   }
   hueco(svg, x, m, H, c, estrecho);
-  const t16 = el("text", { x: (x(idx("2016-01")) + x(idx("2017-01"))) / 2, y: y(150000), "text-anchor": "middle" }, svg);
-  t16.textContent = estrecho ? "s/d" : "sin datos de espacios";
+  if (B[0].i - i0 >= 6) {
+    const t16 = el("text", { x: (x(i0) + x(B[0].i)) / 2, y: y(150000), "text-anchor": "middle" }, svg);
+    t16.textContent = estrecho ? "s/d" : "sin datos de capacidad";
+  }
   // tramos consecutivos (jun-ago 2019 sin PDF completo)
   const tramos = [];
   B.forEach((d, k) => { if (!k || d.i !== B[k - 1].i + 1) tramos.push([]); tramos[tramos.length - 1].push(d); });
