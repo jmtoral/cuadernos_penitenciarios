@@ -835,7 +835,7 @@ CEFERESO No. 5 Oriente                                162                  162  
 CEFERESO No. 7 Nor-Noroeste                                                               134
 ```
 
-Los **162 procesados del CEFERESO 4** aparecen en la línea del CEFERESO 5, sus 1,152 sentenciados se repiten una línea abajo, y los datos del CEFERESO 5 bajan a su vez al 7. La cadena sigue en todas las filas con alguna celda vacía. Una base armada así habría tenido errores silenciosos en casi todos los centros federales. Por eso el extractor no usa `pdftotext`:
+Comparadas con la tabla real, las filas no cuadran: los **162 procesados del CEFERESO 4** aparecen en la línea del CEFERESO 5, mezclados con sentenciados (671) y subtotal (782) que sí son del 5. Los 111 procesados del CEFERESO 5, a su vez, terminan en la línea del CEFERESO 8. Una base armada así habría tenido errores silenciosos en casi todos los centros federales. Por eso el extractor no usa `pdftotext`:
 - lee cada palabra con sus coordenadas (pdfplumber);
 - agrupa las columnas por el borde derecho de las cifras;
 - y si no salen exactamente las columnas esperadas para esa época, **se detiene en vez de adivinar**.
