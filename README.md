@@ -85,6 +85,12 @@ Las tablas que interesan tienen los mismos nombres de columna en 2025 y 2026:
 
 La copia local de los metadatos y de muestras de `datastore_search` está en `data/raw/ckan/`.
 
+### 1.2b Población de referencia (CONAPO)
+
+- Para las tasas por 100 mil habitantes se usan las **proyecciones de población de CONAPO** de [datos.gob.mx](https://www.datos.gob.mx/dataset/proyecciones-de-poblacion/resource/e9160552-769b-41ee-88d1-afc765552608) (`pobproy_inddemo.csv`): población a mitad de año por municipio, sexo y grandes grupos de edad, de 1990 a 2040.
+- `conapo.py` la baja con `datastore_search`, porque el CSV directo da 403, y la agrega por entidad y año en `data/processed/poblacion_conapo.csv`.
+- **Denominador: población de 15 años o más.** Es el grupo publicado más cercano a la población adulta, porque el recurso no trae 18+. La página interpola linealmente entre mitades de año para cada mes.
+
 ### 1.3 INEGI (validación anual)
 
 - CNSIPEE, centros estatales: <https://www.inegi.org.mx/programas/cnsipee/>
@@ -366,7 +372,7 @@ cuaderno_pen/
 **Correr todo:**
 
 ```bash
-conda activate cuaderno_pen && python descargar.py && python ckan.py && python extraer.py 2006-01 && python validar.py && python notebooks/exploracion.py && python pagina.py
+conda activate cuaderno_pen && python descargar.py && python ckan.py && python extraer.py 2006-01 && python validar.py && python notebooks/exploracion.py && python conapo.py && python pagina.py
 ```
 
 **Mes nuevo:** agregar su renglón a `data/enlaces.csv` (periodo, URL del PDF) y volver a correr la cadena. Las páginas HTML de gob.mx tienen un desafío anti‑bots, así que las ligas se toman a mano desde el navegador. Los PDFs sí bajan directo.

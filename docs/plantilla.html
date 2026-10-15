@@ -143,9 +143,15 @@ a { color: var(--line); }
         <button type="button" id="modo-var" data-modo="var" aria-pressed="false">Variación anual</button>
         <button type="button" id="modo-sit" data-modo="sit" aria-pressed="false">Procesados vs. sentenciados</button>
         <button type="button" id="modo-raz" data-modo="raz" aria-pressed="false">Razón</button>
+        <button type="button" id="modo-tas" data-modo="tas" aria-pressed="false">Tasa por 100 mil</button>
       </div>
     </div>
     <div class="lamina-top">
+      <div class="leyenda" id="ley-tas" hidden>
+        <span><i></i>procesadas (sin sentencia) por cada 100 mil personas de 15 años o más</span>
+        <span><i class="e"></i>toda la población privada de la libertad, misma base</span>
+        <span>población: proyecciones de CONAPO</span>
+      </div>
       <div class="leyenda" id="ley-raz" hidden>
         <span><i></i>procesadas por cada 100 sentenciadas</span>
         <span><i class="zs"></i>zona: más sentenciadas que procesadas</span>
@@ -221,6 +227,15 @@ a { color: var(--line); }
 <script>
 const SOBRE = __SOBRE__; // [periodo, espacios, poblacion, personas sobre capacidad por centro, centros sobrepoblados, centros]
 const DATA = __DATA__; // [periodo, comun, federal, poblacion_total, fuente e|t|o]
+const POBNAC = __POBNAC__; // [año, población a mitad de año, población de 15 años o más] (CONAPO)
+// población de 15+ para un mes: interpolación lineal entre mitades de año (julio)
+const P15 = Object.fromEntries(POBNAC.map(([a, , p]) => [a * 12 + 6, p]));
+const pob15 = i => {
+  const a = Math.floor((i - 6) / 12) * 12 + 6, b = a + 12;
+  if (P15[a] === undefined || P15[b] === undefined) return P15[a] ?? P15[b];
+  return P15[a] + (P15[b] - P15[a]) * (i - a) / 12;
+};
+const tasa = (n, i) => n / pob15(i) * 1e5;
 const FUENTE = { e: "tabla por entidad", t: "tabla de 13 meses", o: "tabla de 13 meses, OCR de cuaderno escaneado" };
 const MESES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 const MESES_L = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
@@ -309,16 +324,18 @@ document.querySelectorAll(".modo button").forEach(b => b.addEventListener("click
   document.getElementById("ley-var").hidden = modo !== "var";
   document.getElementById("ley-sit").hidden = modo !== "sit";
   document.getElementById("ley-raz").hidden = modo !== "raz";
+  document.getElementById("ley-tas").hidden = modo !== "tas";
   document.getElementById("ley-nivel").hidden = modo !== "nivel";
   document.getElementById("t-graf").textContent = { nivel: "Población procesada total, mensual",
     var: "Variación anual de la población procesada", sit: "Personas procesadas y sentenciadas, mensual",
-    raz: "Procesadas por cada 100 personas sentenciadas" }[modo];
+    raz: "Procesadas por cada 100 personas sentenciadas",
+    tas: "Personas presas por cada 100 mil habitantes de 15 años o más" }[modo];
   dibujar();
 }));
 
 function dibujar() {
   box.innerHTML = "";
-  const VAR = modo === "var", SIT = modo === "sit", RAZ = modo === "raz";
+  const VAR = modo === "var", SIT = modo === "sit", RAZ = modo === "raz", TAS = modo === "tas";
   const W = Math.max(320, box.clientWidth), estrecho = W < 600;
   const H = estrecho ? 340 : 440;
   const m = { t: 40, r: estrecho ? 14 : 92, b: 34, l: estrecho ? 40 : 52 };
@@ -328,9 +345,10 @@ function dibujar() {
   const yMax = SIT ? 180000 : 140000;
   const lim = Math.ceil(Math.max(...S.filter(d => d.v !== null).map(d => Math.abs(d.v))) / 5) * 5;
   const razMax = Math.max(130, Math.ceil(Math.max(...S.map(d => d.t / (d.pob - d.t) * 100)) / 10) * 10);
-  const y = RAZ ? v => m.t + (1 - v / razMax) * (H - m.t - m.b) : VAR ? v => m.t + (lim - v) / (2 * lim) * (H - m.t - m.b) : v => m.t + (1 - v / yMax) * (H - m.t - m.b);
+  const tasMax = Math.ceil(Math.max(...S.map(d => tasa(d.pob, d.i))) / 50) * 50;
+  const y = TAS ? v => m.t + (1 - v / tasMax) * (H - m.t - m.b) : RAZ ? v => m.t + (1 - v / razMax) * (H - m.t - m.b) : VAR ? v => m.t + (lim - v) / (2 * lim) * (H - m.t - m.b) : v => m.t + (1 - v / yMax) * (H - m.t - m.b);
   const raz = d => d.t / (d.pob - d.t) * 100;
-  const val = d => VAR ? d.v : RAZ ? raz(d) : d.t;
+  const val = d => VAR ? d.v : RAZ ? raz(d) : TAS ? tasa(d.t, d.i) : d.t;
   const sent = d => d.pob - d.t;
   const css = getComputedStyle(document.documentElement);
   const c = n => css.getPropertyValue(n).trim();
@@ -345,11 +363,11 @@ function dibujar() {
   });
 
   // rejilla y eje y
-  const paso = RAZ ? 10 : VAR ? (lim > 30 ? 10 : 5) : 20000;
-  for (let v = VAR ? -lim : 0; v <= (RAZ ? razMax : VAR ? lim : yMax); v += paso) {
+  const paso = TAS ? 50 : RAZ ? 10 : VAR ? (lim > 30 ? 10 : 5) : 20000;
+  for (let v = VAR ? -lim : 0; v <= (TAS ? tasMax : RAZ ? razMax : VAR ? lim : yMax); v += paso) {
     el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: v === 0 ? c("--ink-3") : c("--rule"), "stroke-width": v === 0 ? 1 : .6 }, svg);
     const t = el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg);
-    t.textContent = RAZ ? String(v) : VAR ? (v === 0 ? "0" : (v > 0 ? "+" : "−") + Math.abs(v) + " %") : v === 0 ? "0" : (v / 1000) + " mil";
+    t.textContent = RAZ || TAS ? String(v) : VAR ? (v === 0 ? "0" : (v > 0 ? "+" : "−") + Math.abs(v) + " %") : v === 0 ? "0" : (v / 1000) + " mil";
   }
   // eje x: años
   for (let a = A0; a <= A1; a++) {
@@ -382,6 +400,22 @@ function dibujar() {
     const tl = el("text", estrecho ? { x: x(last.i) - 4, y: y(last.v) - 8, "text-anchor": "end", style: `fill:${c("--ink")};font-size:12px` }
       : { x: x(last.i) + 8, y: y(last.v) + 4, "text-anchor": "start", style: `fill:${c("--ink")};font-size:12px` }, svg);
     tl.textContent = pctFmt(last.v);
+  } else if (TAS) {
+    const linea = (f, col) => {
+      for (let k = 1; k < S.length; k++) {
+        const pun = S[k].src !== "e" || S[k - 1].src !== "e";
+        el("line", { x1: x(S[k - 1].i), y1: y(f(S[k - 1])), x2: x(S[k].i), y2: y(f(S[k])), stroke: col, "stroke-width": 2.2,
+          "stroke-linecap": "round", "stroke-dasharray": pun ? "3 3" : "none" }, svg);
+      }
+    };
+    linea(d => tasa(d.pob, d.i), c("--ink-3"));
+    linea(d => tasa(d.t, d.i), c("--line"));
+    [[tasa(last.pob, last.i), c("--ink-3"), "todas"], [tasa(last.t, last.i), c("--line"), "procesadas"]].forEach(([v, col, txt], k) => {
+      el("circle", { cx: x(last.i), cy: y(v), r: 4.5, fill: col, stroke: c("--panel"), "stroke-width": 2 }, svg);
+      const tl = el("text", estrecho ? { x: x(last.i) - 8, y: y(v) - 10, "text-anchor": "end", style: `fill:${c("--ink")};font-size:12px` }
+        : { x: x(last.i) + 9, y: y(v) + 4, style: `fill:${c("--ink")};font-size:12px` }, svg);
+      tl.textContent = estrecho ? v.toFixed(0) : `${v.toFixed(0)} ${txt}`;
+    });
   } else if (RAZ) {
     // dos zonas: debajo de 100 hay más sentenciadas; encima, más procesadas (nunca ocurrió en la serie)
     el("rect", { x: m.l, y: m.t, width: W - m.l - m.r, height: y(100) - m.t, fill: c("--signal-area") }, svg);
@@ -465,7 +499,11 @@ function dibujar() {
     punto.setAttribute("cx", cx); punto.setAttribute("cy", cy); punto.setAttribute("opacity", 1);
     const prev = byP[S[Math.max(0, d.i - i0 - 12)].p];
     const var12 = d.i - i0 >= 12 ? `${sgn(d.t - prev.t)} vs. un año antes` : "";
-    if (RAZ) tip.innerHTML = `<div class="m">${nombre(d.p)}</div><div class="t">${raz(d).toFixed(1)}</div>
+    if (TAS) tip.innerHTML = `<div class="m">${nombre(d.p)}</div><div class="t">${tasa(d.t, d.i).toFixed(1)}</div>
+      <div class="f">procesadas por cada 100 mil personas de 15 años o más</div>
+      <dl><dt>Toda la población presa</dt><dd>${tasa(d.pob, d.i).toFixed(1)}</dd><dt>Procesadas</dt><dd>${fmt(d.t)}</dd>
+      <dt>Población de 15+ (CONAPO)</dt><dd>${fmt(Math.round(pob15(d.i)))}</dd></dl>`;
+    else if (RAZ) tip.innerHTML = `<div class="m">${nombre(d.p)}</div><div class="t">${raz(d).toFixed(1)}</div>
       <div class="f">procesadas por cada 100 sentenciadas</div>
       <dl><dt>Procesadas</dt><dd>${fmt(d.t)}</dd><dt>Sentenciadas</dt><dd>${fmt(sent(d))}</dd></dl>
       <div class="f">${FUENTE[d.src]}</div>`;
