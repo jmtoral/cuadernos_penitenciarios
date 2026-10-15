@@ -100,7 +100,7 @@ svg .hito-n { font-family: var(--mono); font-weight: 500; fill: var(--panel); fo
 }
 .hitos h2, .notas h2 { font: 700 17px/1.2 var(--display); margin: 0; }
 .hitos ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr; gap: 12px 24px; }
-.hitos li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start; font-size: 14px; }
+.hitos li { display: grid; grid-template-columns: 22px 1fr; gap: 10px; align-items: start; font-size: 13px; line-height: 1.4; }
 .hitos li b { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--ink-2); color: var(--panel); font: 500 11px/1 var(--mono); }
 .hitos li span { color: var(--ink-2); }
 .hitos li strong { color: var(--ink); font-weight: 500; display: block; }
@@ -184,14 +184,6 @@ a { color: var(--line); }
     <p class="lamina-nota" id="nota-sobre"></p>
   </section>
 
-  </div>
-  <aside class="hitos" aria-labelledby="t-hitos">
-    <h2 id="t-hitos">Hitos</h2>
-    <p class="sub">El número es la marca sobre la gráfica.</p>
-    <ol id="hitos"></ol>
-  </aside>
-  </div>
-
   <section class="notas">
     <h2>Fuente y notas</h2>
     <p>SSPC, Prevención y Reinserción Social: Cuaderno Mensual de Información Estadística Penitenciaria Nacional (PDF). Desde enero de 2014 la cifra sale de la tabla por entidad del cuaderno de cada mes y está validada contra los totales impresos, la suma por centro y los datos abiertos de datos.gob.mx (2025–2026).</p>
@@ -214,6 +206,14 @@ a { color: var(--line); }
       <div class="tabla"><table id="tabla"><thead><tr><th>Mes</th><th>Fuero común</th><th>Fuero federal</th><th>Total sin sentencia</th><th>% de la población</th></tr></thead><tbody></tbody></table></div>
     </details>
   </section>
+  </div>
+  <aside class="hitos" aria-labelledby="t-hitos">
+    <h2 id="t-hitos">Hitos</h2>
+    <p class="sub">El número es la marca sobre la gráfica.</p>
+    <ol id="hitos"></ol>
+  </aside>
+  </div>
+
 </div>
 
 <script>
