@@ -302,7 +302,7 @@ function dibujar() {
   const x = i => m.l + (i - i0) / (i1 - i0) * (W - m.l - m.r);
   const yMax = SIT ? 180000 : 140000;
   const lim = Math.ceil(Math.max(...S.filter(d => d.v !== null).map(d => Math.abs(d.v))) / 5) * 5;
-  const razMax = Math.max(100, Math.ceil(Math.max(...S.map(d => d.t / (d.pob - d.t) * 100)) / 10) * 10);
+  const razMax = Math.max(110, Math.ceil(Math.max(...S.map(d => d.t / (d.pob - d.t) * 100)) / 10) * 10);
   const y = RAZ ? v => m.t + (1 - v / razMax) * (H - m.t - m.b) : VAR ? v => m.t + (lim - v) / (2 * lim) * (H - m.t - m.b) : v => m.t + (1 - v / yMax) * (H - m.t - m.b);
   const raz = d => d.t / (d.pob - d.t) * 100;
   const val = d => VAR ? d.v : RAZ ? raz(d) : d.t;
@@ -359,7 +359,7 @@ function dibujar() {
     tl.textContent = pctFmt(last.v);
   } else if (RAZ) {
     el("line", { x1: m.l, x2: W - m.r, y1: y(100), y2: y(100), stroke: c("--signal"), "stroke-width": 1, "stroke-dasharray": "5 4" }, svg);
-    const tp = el("text", { x: m.l + 6, y: y(100) - 6, style: `fill:${c("--signal")};font-size:11px` }, svg);
+    const tp = el("text", { x: m.l + 6, y: y(100) + 14, style: `fill:${c("--signal")};font-size:11px` }, svg);
     tp.textContent = "100: igual número de procesadas y sentenciadas";
     const pr = S.map(d => [x(d.i), y(raz(d))]);
     el("path", { d: `M${pr[0][0]},${y(0)} ` + pr.map(q => `L${q[0]},${q[1]}`).join(" ") + ` L${pr[pr.length - 1][0]},${y(0)} Z`, fill: c("--area") }, svg);
