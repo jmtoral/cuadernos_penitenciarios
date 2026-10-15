@@ -81,7 +81,9 @@ svg .hito-n { font-family: var(--mono); font-weight: 500; fill: var(--panel); fo
 #tip dt, #tip2 dt { color: var(--ink-2); }
 #tip dd, #tip2 dd { margin: 0; text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
 #tip .f, #tip2 .f { color: var(--ink-3); font-size: 11.5px; }
-.cifras { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+.cifras { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1px; background: var(--rule); border: 1px solid var(--rule); border-radius: 6px; overflow: hidden; }
+@media (max-width: 1180px) { .cifras { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .cifras { grid-template-columns: minmax(0, 1fr); } }
 .cifra { background: var(--panel); padding: 16px; display: grid; gap: 4px; align-content: start; }
 .cifra .k { font: 500 11.5px/1.2 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
 .cifra .v { font: 700 28px/1.1 var(--display); font-variant-numeric: tabular-nums; }
@@ -351,7 +353,7 @@ function dibujar() {
   // eje x: años
   for (let a = A0; a <= A1; a++) {
     const xi = x(idx(`${a}-01`));
-    if (estrecho && a % 2) continue;
+    if ((a - A0) % [1, 2, 5, 10].find(s => (A1 - A0) / s * 42 < W - m.l - m.r)) continue;  // cada cuántos años cabe una etiqueta
     el("line", { x1: xi, x2: xi, y1: H - m.b, y2: H - m.b + 5, stroke: c("--ink-3") }, svg);
     const t = el("text", { x: xi, y: H - m.b + 19, "text-anchor": "middle" }, svg);
     t.textContent = a;
@@ -541,7 +543,7 @@ function dibujar2() {
     t.textContent = v === 0 ? "0" : (v / 1000) + " mil";
   }
   for (let a = A0; a <= A1; a++) {
-    if (estrecho && a % 2) continue;
+    if ((a - A0) % [1, 2, 5, 10].find(s => (A1 - A0) / s * 42 < W - m.l - m.r)) continue;  // cada cuántos años cabe una etiqueta
     const xi = x(idx(`${a}-01`));
     el("line", { x1: xi, x2: xi, y1: H - m.b, y2: H - m.b + 5, stroke: c("--ink-3") }, svg);
     const t = el("text", { x: xi, y: H - m.b + 19, "text-anchor": "middle" }, svg);
