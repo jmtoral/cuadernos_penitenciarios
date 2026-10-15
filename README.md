@@ -31,6 +31,7 @@ Base de datos mensual, reproducible y validada, construida a partir del **Cuader
 15. [Diferencias con los censos de INEGI](#15-diferencias-con-los-censos-de-inegi)
 16. [PDFs escaneados (2000–2005): estado y plan](#16-pdfs-escaneados-20002005-estado-y-plan)
 17. [Validación externa con Intersecta y la pista de 1991–1999](#17-validación-externa-con-intersecta-y-la-pista-de-19911999)
+18. [Así se ven los PDFs: los problemas que hubo que resolver](#18-así-se-ven-los-pdfs-los-problemas-que-hubo-que-resolver)
 
 ---
 
@@ -785,4 +786,66 @@ Se promediaron los meses de la tabla por entidad de cada año; en 2022, solo ene
 1. Preguntar a Intersecta de dónde sacaron los cuadernos de 1991–1999 y si los comparten.
 2. Pedir por solicitud de transparencia (PNT) a Prevención y Reinserción Social los cuadernos de 1991–1999 y las versiones completas de jun–ago 2019.
 3. Mientras tanto, los promedios anuales de Intersecta de 1991–1999 pueden usarse como **referencia externa marcada como tal**, nunca mezclados con la serie mensual extraída.
+
+---
+
+## 18. Así se ven los PDFs: los problemas que hubo que resolver
+
+El Cuaderno cambió de formato varias veces en 27 años y ninguna versión se hizo pensando en que alguien la leyera con una computadora. Estos son ejemplos reales, tomados de los PDFs de `data/raw/pdf/`.
+
+### 2000–2005: no hay texto, solo fotos de papel
+
+![Tabla de 13 meses del cuaderno de enero de 2001, escaneada y acostada](docs/img/escaneo_2001-01_tabla_13_meses.jpg)
+
+*Cuaderno de enero de 2001, tabla "Comportamiento de la población penitenciaria por fuero, situación jurídica e incremento mensual". Así viene: una fotocopia escaneada, acostada, con el sello de la página ("008") y sombreado de puntos sobre las cifras.*
+
+- `pdftotext` y pdfplumber devuelven **cero caracteres**: cada página es una imagen de 1696 × 2176 px. Hay que leerla con OCR.
+- La hoja viene **acostada** en 2001–2003 y derecha en 2004–2005; en 2002, además, **chueca y combada**. Por eso los renglones se trazan de izquierda a derecha y no por una altura fija.
+- El sombreado de puntos confunde al OCR. Se borra con un desenfoque leve antes de leer.
+- En el OCR, "Ene" sale a veces como "unc". Los meses se asignan por el orden del renglón, no por el texto.
+- **Cómo se valida sin el PDF digital:** en cada renglón, procesados + sentenciados = subtotal de cada fuero, y común + federal = total. Si un solo dígito se lee mal, la suma no cuadra y el cuaderno falla en voz alta. Así se extrajeron 2000‑01 a 2005‑01 a nivel nacional (`ocr13.py`, §16).
+
+![Tabla de 13 meses del cuaderno de enero de 2002](docs/img/escaneo_2002-01_tabla_13_meses.jpg)
+
+*Enero de 2002: la misma tabla, con otra inclinación y otro escaneo.*
+
+### 2006–2013: hay texto, pero acomodado para el ojo
+
+![Tabla por entidad del cuaderno de junio de 2006](docs/img/epoca_a_2006-06_tabla_entidad.jpg)
+
+*Junio de 2006, "Población penitenciaria según fuero, situación jurídica y sexo por entidad federativa".*
+
+- Las entidades **no van en orden alfabético sino por tamaño** (Distrito Federal, México, Baja California…), y el nombre se repite a la derecha de las cifras.
+- Los centros federales (Islas Marías, CEFERESO 1–4, CEFEREPSI) van mezclados al final, sin renglón de grupo, y hay celdas vacías.
+- Hay dos renglones de total: el del mes y el del **mes anterior** ("TOTAL MES DE MAYO"). Si se toma el segundo por error, la cifra de todo el mes sale corrida.
+- La primera versión del extractor leía las filas intercaladas. Se resolvió leyendo cada palabra con sus coordenadas y armando las columnas por el borde derecho de las cifras.
+
+### 2017–2026: hay texto, pero las celdas vacías mueven las cifras
+
+![Fragmento de la tabla por entidad de agosto de 2026, con los CEFERESO y sus celdas vacías](docs/img/epoca_c_2026-08_celdas_vacias.jpg)
+
+*Agosto de 2026: en los CEFERESO varoniles la columna de mujeres viene vacía, y en los femeniles la de hombres.*
+
+Con `pdftotext -layout` (la herramienta usual para sacar tablas de PDFs) el texto de esas mismas filas sale así:
+
+```
+CEFERESO No. 4 Noroeste                                                                         2,226
+CEFERESO No. 5 Oriente                             2,221                         22         17     1,467
+CEFERESO No. 7 Nor-Noroeste
+```
+
+La cifra **2,226** (el total del CEFERESO 4) cae en la columna equivocada. El 2,221 de la fila de abajo es en realidad una cifra de otra fila, y el CEFERESO 7 se queda sin números. Una base armada así habría tenido errores silenciosos en todos los centros con alguna celda vacía. Por eso el extractor no usa `pdftotext`:
+- lee cada palabra con sus coordenadas (pdfplumber);
+- agrupa las columnas por el borde derecho de las cifras;
+- y si no salen exactamente las columnas esperadas para esa época, **se detiene en vez de adivinar**.
+
+### Y además
+
+- **Jun–ago 2019:** el PDF publicado tiene 1–2 páginas y ninguna tabla (§14).
+- **Dic‑2003:** la liga de gob.mx apunta al cuaderno de dic‑2023.
+- **Abr‑2017:** el total impreso trae cifras pegadas ("111,75664.98386").
+- **Nayarit, may–jun 2012:** el renglón estatal no coincide con la suma de sus propios centros.
+- Variantes de columnas casi cada pocos años: % después de cada subtotal (ene–jun 2017), % solo tras procesados (2020–2021), sin columna TOTAL (2021‑02), tablas partidas en dos hojas (2007, 2020–2021) y páginas a otra escala (2012‑04).
+
+Todo esto lo detectan los chequeos de §6. Un mes que no cuadra queda marcado en `data/processed/validacion.csv`; nunca se descarta en silencio.
 
