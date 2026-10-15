@@ -826,15 +826,16 @@ El Cuaderno cambió de formato varias veces en 27 años y ninguna versión se hi
 
 *Agosto de 2026: en los CEFERESO varoniles la columna de mujeres viene vacía, y en los femeniles la de hombres.*
 
-Con `pdftotext -layout` (la herramienta usual para sacar tablas de PDFs) el texto de esas mismas filas sale así:
+Con `pdftotext -layout` (la herramienta usual para sacar tablas de PDFs) las primeras filas de esa tabla salen así (recortadas a la derecha):
 
 ```
-CEFERESO No. 4 Noroeste                                                                         2,226
-CEFERESO No. 5 Oriente                             2,221                         22         17     1,467
-CEFERESO No. 7 Nor-Noroeste
+CEFERESO No. 1 Altiplano                              13                   13              52                                                52                  65      453
+CEFERESO No. 4 Noroeste                                                                  1,152                                                                1,314
+CEFERESO No. 5 Oriente                                162                  162            671                                                1,152             782       417
+CEFERESO No. 7 Nor-Noroeste                                                               134
 ```
 
-La cifra **2,226** (el total del CEFERESO 4) cae en la columna equivocada. El 2,221 de la fila de abajo es en realidad una cifra de otra fila, y el CEFERESO 7 se queda sin números. Una base armada así habría tenido errores silenciosos en todos los centros con alguna celda vacía. Por eso el extractor no usa `pdftotext`:
+Los **162 procesados del CEFERESO 4** aparecen en la línea del CEFERESO 5, sus 1,152 sentenciados se repiten una línea abajo, y los datos del CEFERESO 5 bajan a su vez al 7. La cadena sigue en todas las filas con alguna celda vacía. Una base armada así habría tenido errores silenciosos en casi todos los centros federales. Por eso el extractor no usa `pdftotext`:
 - lee cada palabra con sus coordenadas (pdfplumber);
 - agrupa las columnas por el borde derecho de las cifras;
 - y si no salen exactamente las columnas esperadas para esa época, **se detiene en vez de adivinar**.
