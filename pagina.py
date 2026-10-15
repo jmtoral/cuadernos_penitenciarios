@@ -33,11 +33,16 @@ sobre = pd.DataFrame({
 sobre = [[p, *map(int, r)] for p, r in sobre.iterrows()]
 
 # Población nacional a mitad de año (CONAPO, conapo.py) para las tasas por 100 mil
-con = pd.read_csv(P / "poblacion_conapo.csv").groupby("anio")[["pob", "pob_15_mas"]].sum()
-pobnac = [[int(a), int(r.pob), int(r.pob_15_mas)] for a, r in con.iterrows()]
+con = pd.read_csv(P / "poblacion_conapo.csv").groupby("anio")[["pob", "pob_15_mas", "hombres_15_mas", "mujeres_15_mas"]].sum()
+pobnac = [[int(a), int(r.pob), int(r.pob_15_mas), int(r.hombres_15_mas), int(r.mujeres_15_mas)] for a, r in con.iterrows()]
+
+# Por sexo (tabla por entidad, desde 2006): procesadas y población total de hombres y de mujeres
+sx = pob[pob.nivel == "entidad"].groupby(["periodo", "sexo", "situacion"]).valor.sum().unstack(["sexo", "situacion"]).fillna(0)
+sexo = [[p, int(r["H", "procesada"]), int(r["H", "procesada"] + r["H", "sentenciada"]),
+         int(r["M", "procesada"]), int(r["M", "procesada"] + r["M", "sentenciada"])] for p, r in sx.iterrows()]
 
 js = lambda x: json.dumps(x, ensure_ascii=False, separators=(",", ":"))
 html = open("docs/plantilla.html", encoding="utf-8", newline="").read()
-html = html.replace("__DATA__", js(data)).replace("__SOBRE__", js(sobre)).replace("__POBNAC__", js(pobnac))
+html = html.replace("__DATA__", js(data)).replace("__SOBRE__", js(sobre)).replace("__POBNAC__", js(pobnac)).replace("__SEXO__", js(sexo))
 Path("docs/index.html").write_text(html, encoding="utf-8", newline="")
 print(f"docs/index.html: {len(data)} meses nacionales ({data[-1][0]}), {len(sobre)} meses de sobrepoblación")
