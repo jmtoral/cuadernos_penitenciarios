@@ -6,14 +6,15 @@ import pandas as pd
 
 P = Path("data/processed")
 pob = pd.read_csv(P / "poblacion.csv", keep_default_na=False)
-n13 = pd.read_csv(P / "nacional_13m.csv")
+# 2000-01 a 2005-01 sale del OCR de los cuadernos escaneados (ocr13.py)
+n13 = pd.concat([pd.read_csv(P / "nacional_13m_ocr.csv").assign(src="o"), pd.read_csv(P / "nacional_13m.csv").assign(src="t")])
 cap = pd.read_csv(P / "capacidad.csv", keep_default_na=False)
 
 # Serie nacional: tabla por entidad; antes de ella, el cuaderno más reciente que reporta el mes en su tabla de 13 meses
 ent = pob[pob.nivel == "entidad"].groupby(["periodo", "fuero", "situacion"]).valor.sum().reset_index().assign(src="e")
 previo = (n13[~n13.periodo_reportado.isin(ent.periodo)]
-          .sort_values("periodo_cuaderno").groupby(["periodo_reportado", "fuero", "situacion"]).valor.last()
-          .reset_index().rename(columns={"periodo_reportado": "periodo"}).assign(src="t"))
+          .sort_values("periodo_cuaderno").groupby(["periodo_reportado", "fuero", "situacion"])[["valor", "src"]].last()
+          .reset_index().rename(columns={"periodo_reportado": "periodo"}))
 nac = pd.concat([previo, ent])
 w = nac.pivot_table(index=["periodo", "src"], columns=["situacion", "fuero"], values="valor", aggfunc="sum")
 data = [[p, int(r["procesada", "comun"]), int(r["procesada", "federal"]), int(r.sum()), s] for (p, s), r in w.iterrows()]

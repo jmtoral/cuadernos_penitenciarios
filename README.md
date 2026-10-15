@@ -4,9 +4,9 @@ Base de datos mensual, reproducible y validada, construida a partir del **Cuader
 
 **Pregunta central.** ¿Cómo ha evolucionado el número de **personas procesadas, es decir, privadas de la libertad sin sentencia**? Primero se mira el sexenio de López Obrador comparado con el de Peña Nieto; después, el resto de la historia disponible (2006 a la fecha y, más adelante, desde 2000).
 
-> Estado (2026‑10‑15): **fases 1, 2 y 3 terminadas**. 2006‑01 a 2026‑08 está extraído y validado: 245 de 248 meses. Faltan jun–ago 2019, cuyos PDFs publicados están incompletos. Los sexenios de Calderón y Peña Nieto quedan completos a nivel entidad y centro; 2005 sale, a nivel nacional, de la tabla de 13 meses de los cuadernos de 2006. **Fase 5 iniciada:** la serie nacional por fuero y situación jurídica de 2000‑01 a 2005‑01 ya está en `nacional_13m_ocr.csv` (OCR de los cuadernos escaneados de enero de 2001 a 2005). Ver [§14](#14-bitácora). Las decisiones de diseño están en [§10](#10-registro-de-decisiones).
+> Estado (2026‑10‑15): **fases 1, 2 y 3 terminadas**. 2006‑01 a 2026‑08 está extraído y validado: 245 de 248 meses. Faltan jun–ago 2019, cuyos PDFs publicados están incompletos. Los sexenios de Calderón y Peña Nieto quedan completos a nivel entidad y centro; 2005 sale, a nivel nacional, de la tabla de 13 meses de los cuadernos de 2006. **Fase 5 iniciada:** la serie nacional por fuero y situación jurídica de 2000‑01 a 2005‑01 ya está en `nacional_13m_ocr.csv` (OCR de los cuadernos escaneados de enero de 2001 a 2005), y la gráfica 1 y la página ya la usan. Ver [§14](#14-bitácora). Las decisiones de diseño están en [§10](#10-registro-de-decisiones).
 
-**Gráfica interactiva:** <https://jmtoral.github.io/cuadernos_penitenciarios/> (personas sin sentencia, mensual, 2005–2026; `docs/index.html` lo genera `pagina.py` desde `docs/plantilla.html`).
+**Gráfica interactiva:** <https://jmtoral.github.io/cuadernos_penitenciarios/> (personas sin sentencia, mensual, 2000–2026; `docs/index.html` lo genera `pagina.py` desde `docs/plantilla.html`).
 
 ![Personas procesadas por fuero](graficas/1_procesados_nacional.png)
 
@@ -324,7 +324,7 @@ Hitos que se marcan **explícitamente** en las gráficas. Las publicaciones en e
 
 Se hacen en un notebook con matplotlib. Cuando la historia esté armada se pasa a una página interactiva.
 
-1. **Procesados nacionales por mes**, en número absoluto y como % de la población total, separados por fuero. Incluye bandas de sexenio y líneas en los hitos de §7.
+1. **Procesados nacionales por mes**, en número absoluto y como % de la población total, separados por fuero. Incluye bandas de sexenio y líneas en los hitos de §7. Empieza en 2000: 2000‑2004 sale de `nacional_13m_ocr.csv` (OCR, en punteado), 2005 de la tabla de 13 meses de los cuadernos de 2006 y desde 2006 de la tabla por entidad. Si un mes viene en varios cuadernos, manda el más reciente.
 2. **% de procesados por entidad**, como heatmap entidad × mes o small multiples. Los centros federales van como su propia "entidad".
 3. **CEFERESO**: procesados por centro a lo largo del tiempo, con nombres sin armonizar.
 
@@ -648,7 +648,7 @@ Lo que hizo falta además (en `ocr13.py`):
 
 **Pendiente:**
 
-- La gráfica y la página aún no usan `nacional_13m_ocr.csv`; la serie nacional que muestran empieza en 2005.
+- ~~La gráfica y la página aún no usan `nacional_13m_ocr.csv`.~~ Hecho: la gráfica 1 y la página empiezan en 2000; 2000‑2004 va punteado y marcado como OCR (en la tabla de la página, con †). 2005 en adelante no cambió (mismas cifras en `docs/index.html`). El "punto más bajo" de la página pasa a ser enero de 2000.
 - Tablas por entidad y por centro de 2000‑2005 (resto de §16), con el mismo método.
 - Tesseract y `pytesseract` quedaron instalados en el env, aunque ya no se usan.
 

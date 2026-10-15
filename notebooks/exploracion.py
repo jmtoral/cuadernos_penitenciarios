@@ -30,7 +30,7 @@ plt.rcParams.update({"font.size": 10, "axes.edgecolor": TINTA2, "axes.labelcolor
                      "axes.spines.right": False, "axes.grid": True, "grid.color": REJILLA,
                      "grid.linewidth": 0.6, "lines.linewidth": 2, "figure.dpi": 110})
 
-SEXENIOS = [("Fox", "2000-12", "2006-11"), ("Calderón", "2006-12", "2012-11"), ("Peña Nieto", "2012-12", "2018-11"), ("López Obrador", "2018-12", "2024-09"),
+SEXENIOS = [("Zedillo", "1994-12", "2000-11"), ("Fox", "2000-12", "2006-11"), ("Calderón", "2006-12", "2012-11"), ("Peña Nieto", "2012-12", "2018-11"), ("López Obrador", "2018-12", "2024-09"),
             ("Sheinbaum", "2024-10", "2030-09")]
 HITOS = [("2016-06", "SPA en todo el país"), ("2019-04", "PPO ampliada · cierre Islas Marías"),
          ("2020-04", "Ley de Amnistía"), ("2024-09", "Reforma judicial"),
@@ -57,7 +57,7 @@ def decorar(ax, inicio, fin, etiquetas=True):
                 ax.text(x, 0.02, " " + t, rotation=90, transform=ax.get_xaxis_transform(),
                         va="bottom", ha="right", fontsize=7.5, color=TINTA2)
     ax.set_xlim(inicio, fin)
-    ax.xaxis.set_major_locator(mdates.YearLocator())
+    ax.xaxis.set_major_locator(mdates.YearLocator(2))
     ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
 
 
@@ -66,28 +66,32 @@ def decorar(ax, inicio, fin, etiquetas=True):
 
 # %%
 pob = pd.read_csv(P / "poblacion.csv", keep_default_na=False)
-n13 = pd.read_csv(P / "nacional_13m.csv")
+n13 = pd.concat([pd.read_csv(P / "nacional_13m_ocr.csv").assign(fuente="tabla 13 meses (OCR)"),  # 2000-01 a 2005-01
+                 pd.read_csv(P / "nacional_13m.csv").assign(fuente="tabla 13 meses")])
 ent = pob[pob.nivel == "entidad"]
 
 nac = ent.groupby(["periodo", "fuero", "situacion"]).valor.sum().rename("valor").reset_index().assign(fuente="tabla por entidad")
 previo = (n13[~n13.periodo_reportado.isin(nac.periodo)]
-          .sort_values("periodo_cuaderno").groupby(["periodo_reportado", "fuero", "situacion"]).valor.last()
-          .reset_index().rename(columns={"periodo_reportado": "periodo"}).assign(fuente="tabla 13 meses"))
+          .sort_values("periodo_cuaderno").groupby(["periodo_reportado", "fuero", "situacion"])[["valor", "fuente"]].last()
+          .reset_index().rename(columns={"periodo_reportado": "periodo"}))
 nac = pd.concat([previo, nac])
 nac["fecha"] = nac.periodo.map(mes)
 w = nac.pivot_table(index="fecha", columns=["fuero", "situacion"], values="valor")
 total = w.T.groupby(level=0).sum().T  # por fuero
 proc = w.xs("procesada", axis=1, level=1)
 pct = proc / total * 100
-print("Cobertura:", w.index.min().date(), "a", w.index.max().date(), "|", len(w), "meses")
+ocr = nac[nac.fuente.str.contains("OCR")].fecha.max()  # último mes que sale del OCR
+print("Cobertura:", w.index.min().date(), "a", w.index.max().date(), "|", len(w), "meses | OCR hasta", ocr.date())
 pct.tail(3).round(1)
 
 # %%
 inicio, fin = w.index.min(), w.index.max() + pd.DateOffset(months=10)  # margen para las etiquetas finales
 fig, (a1, a2) = plt.subplots(2, 1, figsize=(11, 8), sharex=True)
 for f, c, nombre in (("comun", AZUL, "Fuero común"), ("federal", NARANJA, "Fuero federal")):
-    a1.plot(proc.index, proc[f] / 1000, color=c, label=nombre)
-    a2.plot(pct.index, pct[f], color=c, label=nombre)
+    # tramo del OCR punteado; comparte su último mes con el tramo con texto
+    for a, s in ((a1, proc[f] / 1000), (a2, pct[f])):
+        a.plot(s[:ocr], color=c, ls=(0, (3, 2)))
+        a.plot(s[ocr:], color=c, label=nombre)
     a1.annotate(f"{nombre}: {proc[f].iloc[-1]:,.0f}", (proc.index[-1], proc[f].iloc[-1] / 1000),
                 xytext=(6, 0), textcoords="offset points", va="center", fontsize=8.5, color=TINTA)
     a2.annotate(f"{pct[f].iloc[-1]:.1f}%", (pct.index[-1], pct[f].iloc[-1]),
@@ -102,7 +106,8 @@ for a, etiquetas in ((a1, True), (a2, False)):
 a1.set_title("Personas privadas de la libertad sin sentencia, por fuero", loc="left", color=TINTA, pad=18)
 a2.set_title("Proporción sin sentencia dentro de cada fuero", loc="left", color=TINTA, pad=18)
 fig.text(0.01, 0.005, "Fuente: SSPC/PRS, Cuaderno Mensual de Información Estadística Penitenciaria Nacional. "
-         "Antes de 2006: tabla de 13 meses de cuadernos posteriores.", fontsize=7.5, color=TINTA2)
+         "Antes de 2006: tabla de 13 meses de cuadernos posteriores; 2000-2004 (punteado), por OCR de cuadernos escaneados.",
+         fontsize=7.5, color=TINTA2)
 fig.tight_layout()
 fig.savefig(G / "1_procesados_nacional.png", bbox_inches="tight")
 

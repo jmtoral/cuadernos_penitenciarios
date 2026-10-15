@@ -163,7 +163,7 @@ a { color: var(--line); }
       </div>
       <div class="leyenda" id="ley-nivel">
         <span><i></i>tabla por entidad del cuaderno del mes</span>
-        <span><i class="d"></i>tabla de 13 meses de un cuaderno posterior</span>
+        <span><i class="d"></i>tabla de 13 meses de un cuaderno posterior (2000–2004: OCR de cuadernos escaneados)</span>
         <span><i class="a h"></i>jun–ago 2019: el PDF publicado no trae tablas</span>
       </div>
     </div>
@@ -200,11 +200,11 @@ a { color: var(--line); }
       </ul>
       <p>El total nacional por fuero de esos meses sale de la tabla de 13 meses de cuadernos posteriores. El desglose por entidad y por centro, y por lo tanto la sobrepoblación, no existe para esos tres meses.</p>
     </div>
-    <p>2005 viene de la tabla de 13 meses del cuaderno de enero de 2006, el primero extraído. El cuaderno de diciembre de 2017 revisó a la baja el fuero federal de enero a marzo de 2017; aquí se usa la cifra publicada en el cuaderno de cada mes.</p>
+    <p>2000 a 2004 sale de la tabla de 13 meses de los cuadernos de enero de 2001 a 2005, que están escaneados; las cifras se leyeron por OCR y se verificaron con los subtotales y totales de la propia tabla. 2005 viene de la tabla de 13 meses del cuaderno de enero de 2006, el primero con texto. El cuaderno de diciembre de 2017 revisó a la baja el fuero federal de enero a marzo de 2017; aquí se usa la cifra publicada en el cuaderno de cada mes.</p>
     <p>Datos y código: <a href="https://github.com/jmtoral/cuadernos_penitenciarios" target="_blank" rel="noopener">github.com/jmtoral/cuadernos_penitenciarios</a></p>
     <details>
       <summary>Ver la serie completa en tabla</summary>
-      <p class="nota-tabla">* Mes tomado de la tabla de comportamiento de 13 meses de un cuaderno posterior: 2005 completo y junio a agosto de 2019. Es el mismo tramo que aparece punteado en la gráfica.</p>
+      <p class="nota-tabla">* Mes tomado de la tabla de comportamiento de 13 meses de un cuaderno posterior: 2005 completo y junio a agosto de 2019. † Igual, pero leído por OCR de un cuaderno escaneado: enero de 2000 a diciembre de 2004. Son los tramos que aparecen punteados en la gráfica.</p>
       <div class="tabla"><table id="tabla"><thead><tr><th>Mes</th><th>Fuero común</th><th>Fuero federal</th><th>Total sin sentencia</th><th>% de la población</th></tr></thead><tbody></tbody></table></div>
     </details>
   </section>
@@ -220,10 +220,11 @@ a { color: var(--line); }
 
 <script>
 const SOBRE = __SOBRE__; // [periodo, espacios, poblacion, personas sobre capacidad por centro, centros sobrepoblados, centros]
-const DATA = __DATA__; // [periodo, comun, federal, poblacion_total, fuente e|t]
+const DATA = __DATA__; // [periodo, comun, federal, poblacion_total, fuente e|t|o]
+const FUENTE = { e: "tabla por entidad", t: "tabla de 13 meses", o: "tabla de 13 meses, OCR de cuaderno escaneado" };
 const MESES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 const MESES_L = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
-const SEXENIOS = [["Fox","2000-12","2006-11"],["Calderón","2006-12","2012-11"],["Peña Nieto","2012-12","2018-11"],["López Obrador","2018-12","2024-09"],["Sheinbaum","2024-10","2030-09"]];
+const SEXENIOS = [["Zedillo","1994-12","2000-11"],["Fox","2000-12","2006-11"],["Calderón","2006-12","2012-11"],["Peña Nieto","2012-12","2018-11"],["López Obrador","2018-12","2024-09"],["Sheinbaum","2024-10","2030-09"]];
 const HITOS = [
   ["2016-06","Sistema penal acusatorio en todo el país","Vence el plazo de ocho años de la reforma de 2008."],
   ["2019-04","Se amplía la prisión preventiva oficiosa","Reforma al artículo 19 (DOF 12/04/2019). En marzo cerró el penal de Islas Marías."],
@@ -268,7 +269,7 @@ document.getElementById("hitos").innerHTML = HITOS.map(([p, t, s], k) =>
 
 // tabla
 document.querySelector("#tabla tbody").innerHTML = S.slice().reverse().map(d =>
-  `<tr><td>${corto(d.p)}${d.src === "t" ? " *" : ""}</td><td>${fmt(d.c)}</td><td>${fmt(d.f)}</td><td>${fmt(d.t)}</td><td>${(d.t / d.pob * 100).toFixed(1)}</td></tr>`).join("");
+  `<tr><td>${corto(d.p)}${{t: " *", o: " †"}[d.src] || ""}</td><td>${fmt(d.c)}</td><td>${fmt(d.f)}</td><td>${fmt(d.t)}</td><td>${(d.t / d.pob * 100).toFixed(1)}</td></tr>`).join("");
 
 // gráfica
 const box = document.getElementById("graf");
@@ -374,7 +375,7 @@ function dibujar() {
     const ancho = Math.max(1.5, (x(i0 + 1) - x(i0)) * .72);
     S.filter(d => d.v !== null).forEach(d => {
       el("rect", { x: x(d.i) - ancho / 2, y: Math.min(y(0), y(d.v)), width: ancho, height: Math.max(.5, Math.abs(y(d.v) - y(0))),
-        fill: d.v > 0 ? c("--signal") : c("--line"), opacity: d.src === "t" ? .55 : 1 }, svg);
+        fill: d.v > 0 ? c("--signal") : c("--line"), opacity: d.src !== "e" ? .55 : 1 }, svg);
     });
     const t0 = el("text", { x: (x(i0) + x(i0 + 11)) / 2, y: y(0) - 8, "text-anchor": "middle" }, svg);
     t0.textContent = estrecho ? "" : "sin año previo";
@@ -394,7 +395,7 @@ function dibujar() {
     tp.textContent = estrecho ? "100" : "100 = mismo número";
     const pr = S.map(d => [x(d.i), y(raz(d))]);
     for (let k = 1; k < S.length; k++) {
-      const t13 = S[k].src === "t" || S[k - 1].src === "t";
+      const t13 = S[k].src !== "e" || S[k - 1].src !== "e";
       el("line", { x1: pr[k - 1][0], y1: pr[k - 1][1], x2: pr[k][0], y2: pr[k][1], stroke: c("--line"), "stroke-width": 2.2,
         "stroke-linecap": "round", "stroke-dasharray": t13 ? "3 3" : "none" }, svg);
     }
@@ -408,7 +409,7 @@ function dibujar() {
   } else if (SIT) {
     const linea = (f, col) => {
       for (let k = 1; k < S.length; k++) {
-        const t13 = S[k].src === "t" || S[k - 1].src === "t";
+        const t13 = S[k].src !== "e" || S[k - 1].src !== "e";
         el("line", { x1: x(S[k - 1].i), y1: y(f(S[k - 1])), x2: x(S[k].i), y2: y(f(S[k])), stroke: col, "stroke-width": 2.2,
           "stroke-linecap": "round", "stroke-dasharray": t13 ? "3 3" : "none" }, svg);
       }
@@ -430,7 +431,7 @@ function dibujar() {
   const pts = S.map(d => [x(d.i), y(d.t)]);
   el("path", { d: `M${pts[0][0]},${y(0)} ` + pts.map(q => `L${q[0]},${q[1]}`).join(" ") + ` L${pts[pts.length - 1][0]},${y(0)} Z`, fill: c("--area") }, svg);
   for (let k = 1; k < S.length; k++) {
-    const t13 = S[k].src === "t" || S[k - 1].src === "t";
+    const t13 = S[k].src !== "e" || S[k - 1].src !== "e";
     el("line", { x1: pts[k - 1][0], y1: pts[k - 1][1], x2: pts[k][0], y2: pts[k][1], stroke: c("--line"), "stroke-width": 2.2,
       "stroke-linecap": "round", "stroke-dasharray": t13 ? "3 3" : "none" }, svg);
   }
@@ -441,7 +442,7 @@ function dibujar() {
     const t = el("text", { x: x(d.i) + dx, y: y(d.t) + dy, "text-anchor": ancla, style: `fill:${c("--ink")};font-size:12px` }, svg);
     t.textContent = txt;
   };
-  marca(minD, `${fmt(minD.t)} · ${corto(minD.p)}`, "middle", 0, 20, c("--line"));
+  marca(minD, `${fmt(minD.t)} · ${corto(minD.p)}`, minD === S[0] ? "start" : "middle", minD === S[0] ? 6 : 0, 20, c("--line"));
   if (estrecho) marca(last, fmt(last.t), "end", -8, -10, c("--signal"));
   else marca(last, fmt(last.t), "start", 9, 4, c("--signal"));
   }
@@ -467,20 +468,20 @@ function dibujar() {
     if (RAZ) tip.innerHTML = `<div class="m">${nombre(d.p)}</div><div class="t">${raz(d).toFixed(1)}</div>
       <div class="f">procesadas por cada 100 sentenciadas</div>
       <dl><dt>Procesadas</dt><dd>${fmt(d.t)}</dd><dt>Sentenciadas</dt><dd>${fmt(sent(d))}</dd></dl>
-      <div class="f">${d.src === "t" ? "tabla de 13 meses" : "tabla por entidad"}</div>`;
+      <div class="f">${FUENTE[d.src]}</div>`;
     else if (SIT) tip.innerHTML = `<div class="m">${nombre(d.p)}</div>
       <dl><dt>Procesadas</dt><dd>${fmt(d.t)}</dd><dt>Sentenciadas</dt><dd>${fmt(sent(d))}</dd>
       <dt>% sin sentencia</dt><dd>${(d.t / d.pob * 100).toFixed(1)} %</dd><dt>Población total</dt><dd>${fmt(d.pob)}</dd></dl>
-      <div class="f">${d.src === "t" ? "tabla de 13 meses" : "tabla por entidad"}</div>`;
+      <div class="f">${FUENTE[d.src]}</div>`;
     else if (VAR) tip.innerHTML = `<div class="m">${nombre(d.p)}</div><div class="t">${pctFmt(d.v)}</div>
       <div class="f">contra ${nombre(d.ant.p)}</div>
       <dl><dt>Sin sentencia</dt><dd>${fmt(d.t)}</dd><dt>Un año antes</dt><dd>${fmt(d.ant.t)}</dd>
       <dt>Diferencia</dt><dd>${sgn(d.t - d.ant.t)}</dd></dl>
-      <div class="f">${d.src === "t" || d.ant.src === "t" ? "incluye un mes de la tabla de 13 meses" : "tabla por entidad"}</div>`;
+      <div class="f">${d.src === "o" || d.ant.src === "o" ? "incluye un mes por OCR" : d.src === "t" || d.ant.src === "t" ? "incluye un mes de la tabla de 13 meses" : "tabla por entidad"}</div>`;
     else tip.innerHTML = `<div class="m">${nombre(d.p)}</div><div class="t">${fmt(d.t)}</div>
       <dl><dt>Fuero común</dt><dd>${fmt(d.c)}</dd><dt>Fuero federal</dt><dd>${fmt(d.f)}</dd>
       <dt>% de la población</dt><dd>${(d.t / d.pob * 100).toFixed(1)} %</dd></dl>
-      <div class="f">${var12}${var12 ? " · " : ""}${d.p >= HUECO[0] && d.p <= HUECO[1] ? "PDF del mes incompleto; dato de la tabla de 13 meses" : d.src === "t" ? "tabla de 13 meses" : "tabla por entidad"}</div>`;
+      <div class="f">${var12}${var12 ? " · " : ""}${d.p >= HUECO[0] && d.p <= HUECO[1] ? "PDF del mes incompleto; dato de la tabla de 13 meses" : FUENTE[d.src]}</div>`;
     tip.hidden = false;
     const scale = r.width / W, tw = tip.offsetWidth, th = tip.offsetHeight;
     let left = cx * scale + 14; if (left + tw > r.width) left = cx * scale - tw - 14;
