@@ -30,7 +30,7 @@ plt.rcParams.update({"font.size": 10, "axes.edgecolor": TINTA2, "axes.labelcolor
                      "axes.spines.right": False, "axes.grid": True, "grid.color": REJILLA,
                      "grid.linewidth": 0.6, "lines.linewidth": 2, "figure.dpi": 110})
 
-SEXENIOS = [("Peña Nieto", "2012-12", "2018-11"), ("López Obrador", "2018-12", "2024-09"),
+SEXENIOS = [("Fox", "2000-12", "2006-11"), ("Calderón", "2006-12", "2012-11"), ("Peña Nieto", "2012-12", "2018-11"), ("López Obrador", "2018-12", "2024-09"),
             ("Sheinbaum", "2024-10", "2030-09")]
 HITOS = [("2016-06", "SPA en todo el país"), ("2019-04", "PPO ampliada · cierre Islas Marías"),
          ("2020-04", "Ley de Amnistía"), ("2024-09", "Reforma judicial"),
@@ -102,7 +102,7 @@ for a, etiquetas in ((a1, True), (a2, False)):
 a1.set_title("Personas privadas de la libertad sin sentencia, por fuero", loc="left", color=TINTA, pad=18)
 a2.set_title("Proporción sin sentencia dentro de cada fuero", loc="left", color=TINTA, pad=18)
 fig.text(0.01, 0.005, "Fuente: SSPC/PRS, Cuaderno Mensual de Información Estadística Penitenciaria Nacional. "
-         "Antes de 2014: tabla de 13 meses de cuadernos posteriores.", fontsize=7.5, color=TINTA2)
+         "Antes de 2006: tabla de 13 meses de cuadernos posteriores.", fontsize=7.5, color=TINTA2)
 fig.tight_layout()
 fig.savefig(G / "1_procesados_nacional.png", bbox_inches="tight")
 

@@ -4,9 +4,9 @@ Base de datos mensual, reproducible y validada, construida a partir del **Cuader
 
 **Pregunta central.** ¿Cómo ha evolucionado el número de **personas procesadas, es decir, privadas de la libertad sin sentencia**? Primero se mira el sexenio de López Obrador comparado con el de Peña Nieto; después, el resto de la historia disponible (2006 a la fecha y, más adelante, desde 2000).
 
-> Estado (2026‑10‑14): **fases 1 y 2 terminadas**. 2014‑01 a 2026‑08 está extraído y validado: 149 de 152 meses. Faltan jun–ago 2019, cuyos PDFs publicados están incompletos. Para cerrar la base de Peña Nieto falta dic‑2012 a dic‑2013 (fase 3, época A); a nivel nacional ya se cubre con la tabla de 13 meses de los cuadernos de 2014. Ver [§14](#14-bitácora). Las decisiones de diseño están en [§10](#10-registro-de-decisiones).
+> Estado (2026‑10‑15): **fases 1, 2 y 3 terminadas**. 2006‑01 a 2026‑08 está extraído y validado: 245 de 248 meses. Faltan jun–ago 2019, cuyos PDFs publicados están incompletos. Los sexenios de Calderón y Peña Nieto quedan completos a nivel entidad y centro; 2005 sale, a nivel nacional, de la tabla de 13 meses de los cuadernos de 2006. Ver [§14](#14-bitácora). Las decisiones de diseño están en [§10](#10-registro-de-decisiones).
 
-**Gráfica interactiva:** <https://jmtoral.github.io/cuadernos_penitenciarios/> (personas sin sentencia, mensual, 2016–2026; `docs/index.html` lo genera `pagina.py` desde `docs/plantilla.html`).
+**Gráfica interactiva:** <https://jmtoral.github.io/cuadernos_penitenciarios/> (personas sin sentencia, mensual, 2005–2026; `docs/index.html` lo genera `pagina.py` desde `docs/plantilla.html`).
 
 ![Personas procesadas por fuero](graficas/1_procesados_nacional.png)
 
@@ -120,7 +120,7 @@ gantt
 | Época | Años | Texto | Rasgos | Fase |
 |---|---|---|---|---|
 | **0** | 2000‑2005 | **escaneado, sin capa de texto** | requiere OCR | 5 (posible uso de Colab con GPU) |
-| **A** | 2006‑2013 (43‑54 pp.) | sí | tabla por entidad "según fuero, situación jurídica y sexo" impresa en **dos bloques lado a lado**, así que las filas se intercalan al extraer. Ya hay tablas por centro ("Capacidad, sobrepoblación y población… por entidad federativa y centro"). Habla de "Internos" y "Procesados". | 3 |
+| **A** | 2006‑2013 (43‑54 pp.) | sí | tabla por entidad "según fuero, situación jurídica y sexo" con los renglones **ordenados por tamaño** y el nombre de la entidad repetido a la derecha de las cifras (ver [§12](#12-trampas-conocidas)). Ya hay tablas por centro ("Capacidad, sobrepoblación y población… por entidad federativa y centro"). Habla de "Internos" y "Procesados". | 3 |
 | **B** | 2014‑2016 (58‑61 pp.) | sí | mismo contenido que la C, con variantes de títulos y renglones (ver [§12](#12-trampas-conocidas)); dice "Capacidad" e "Instituciones penitenciarias federales" hasta 2016 | 2 |
 | **C** | 2017/2019‑2026 | sí | "Población privada de la libertad", "Personas procesadas", "Espacios". Tabla de origen por cada CEFERESO. Su estructura equivale a los CSV de 2026. | 1 |
 
@@ -336,7 +336,7 @@ cuaderno_pen/
 ├── README.md
 ├── .gitignore              # excluye data/raw/
 ├── descargar.py            # data/enlaces.csv → PDFs + manifiesto
-├── extraer.py              # PDFs → poblacion/capacidad/nacional_13m/impresos (épocas B y C, 2014+)
+├── extraer.py              # PDFs → poblacion/capacidad/nacional_13m/impresos (épocas A, B y C, 2006+)
 ├── ckan.py                 # datastore_search → data/raw/ckan/<AAAA-MM>/
 ├── validar.py              # chequeos de §6 → validacion.csv + reporte_validacion.md
 ├── notebooks/
@@ -363,7 +363,7 @@ cuaderno_pen/
 **Correr todo:**
 
 ```bash
-conda activate cuaderno_pen && python descargar.py && python ckan.py && python extraer.py 2014-01 && python validar.py && python notebooks/exploracion.py && python pagina.py
+conda activate cuaderno_pen && python descargar.py && python ckan.py && python extraer.py 2006-01 && python validar.py && python notebooks/exploracion.py && python pagina.py
 ```
 
 **Mes nuevo:** agregar su renglón a `data/enlaces.csv` (periodo, URL del PDF) y volver a correr la cadena. Las páginas HTML de gob.mx tienen un desafío anti‑bots, así que las ligas se toman a mano desde el navegador. Los PDFs sí bajan directo.
@@ -414,7 +414,7 @@ flowchart LR
     F6 --> F7["Publicación<br/>repo / datos abiertos"]
 ```
 
-Para la base de Peña Nieto (dic‑2012 a nov‑2018) se necesitan las épocas A (2012‑2013), B (2014‑2016) y C (2017‑2018). La comparación completa contra AMLO queda lista al terminar la fase 3. Las fases 1 y 2 ya permiten comparar contra el tramo dic‑2013 a nov‑2018.
+Para la base de Peña Nieto (dic‑2012 a nov‑2018) se necesitan las épocas A (2012‑2013), B (2014‑2016) y C (2017‑2018). Con la fase 3 terminada, los sexenios de Calderón y Peña Nieto están completos a nivel entidad y centro.
 
 ---
 
@@ -422,7 +422,15 @@ Para la base de Peña Nieto (dic‑2012 a nov‑2018) se necesitan las épocas A
 
 - **Encoding.** Los `.txt` de `pdftotext` salen en Latin‑1 o cp1252: "Michoac�n". Hay que leer con el encoding correcto o pasar `-enc UTF-8`.
 - **Columnas desalineadas.** `pdftotext -layout` desalinea las celdas vacías (CEFERESO varoniles o femeniles). Por eso se usa pdfplumber.
-- **Bloques lado a lado.** En la época A las filas de dos bloques se intercalan. Hay que recortar por coordenadas (`page.crop`) cada mitad.
+- **Variantes de la época A (2006‑2013)**, detectadas por el texto y no por la fecha:
+  - **Nombre repetido a la derecha.** La tabla por entidad trae el nombre de la entidad dos veces: a la izquierda con su lugar por tamaño ("1 DISTRITO FEDERAL") y a la derecha de las cifras ("DISTRITO FEDERAL 1"). `pdftotext -layout` intercala los dos bloques; con pdfplumber los renglones salen bien, pero el lugar de la derecha contaría como columna. Por eso cada página se recorta (`page.crop`) donde empieza la primera palabra con letras después de un renglón de cifras, y se quita el lugar del inicio de la etiqueta.
+  - **Orden por tamaño.** Los renglones van de la entidad más poblada a la menos, así que un centro federal (Islas Marías) puede venir antes que un estado chico (Tlaxcala, 2006). Un renglón cuyo nombre es un estado siempre es estatal.
+  - **2007: la tabla no cabe en una hoja.** El % final, o solo el nombre repetido, pasa a la página siguiente. Esa hoja se descarta (no tiene renglones con 10 o más cifras) y se acepta la variante de 21 columnas.
+  - **"######"**: celdas desbordadas de Excel en el subtotal de sentenciados del renglón TOTAL (2008) y en la tabla de 13 meses. Cuentan para ubicar columnas pero no son cifras. Cuando falta un total impreso, `entidades_vs_nacional` usa los subtotales si los hay y `nacional_vs_13m` cubre el resto.
+  - **Fechas y títulos.** "Enero de 2006" (con "de"); la tabla de 13 meses se titula "…e incremento mensual" hasta 2010; en algunos meses de 2010 el título de la tabla por entidad no trae el mes.
+  - **Notas al pie pegadas al nombre** del estado en la tabla por centro: "CHIAPAS**", "SAN LUIS POTO*S*Í", "PUEBLA (3)", "AGUASCALIENTES 2", "4 2 GUANAJUATO".
+  - **Escalas distintas.** 2012‑04 trae páginas de 2,263 pt de ancho (el límite etiqueta/cifras se escala) y en 2010‑10 la página de los centros federales está a otra escala que las demás, así que las columnas de la tabla por centro se ubican página por página.
+  - **Centros federales:** "Colonia Penal Federal Islas Marías" y "Cefereso 2 Puente Grande", sin renglón de grupo en la tabla por centro.
 - **Fechas en los CSV.** En 2026, `fecha` es el timestamp de carga. El periodo se toma del nombre del dataset.
 - **Unidades en los CSV.** `sobrepoblacion_relativa` viene como fracción en 2025 y como % en 2026. Los `_prct` son strings en 2025.
 - **Recurso mal titulado.** En 2026, `fue_sjur_sex_ent` aparece titulado como "ingresos y egresos".
@@ -547,6 +555,47 @@ Para la base de Peña Nieto (dic‑2012 a nov‑2018) se necesitan las épocas A
 - **Efecto sobre 2017‑2026.** Las cifras no cambian. Hay dos mejoras: (1) se corrigieron los nombres de centro pegados de ene–abr 2017, que explicaban el pico de CEFERESO 3; (2) los cuadernos 2017‑03, 2017‑04, 2017‑08, 2018‑08 y 2018‑11 recuperan el renglón de su propio mes en la tabla de 13 meses (20 filas más en `nacional_13m.csv`).
 - **CEFERESO 3 Noreste** deja de tener población a fines de 2016 (en nov‑2016 aparece sin cifras).
 - **Velocidad:** ~20–30 s por cuaderno. pdfplumber lee palabra por palabra con coordenadas unas 60 páginas por PDF. La corrida completa de 152 meses tarda ~50 min.
+
+### Fase 3: época A, 2006‑2013
+
+**Fecha:** 2026‑10‑14 y 15. **Duración total:** ~3 h, de las ~22:40 a las ~01:45. Casi todo fue tiempo de máquina: dos corridas de 2006‑2013 (~45 min cada una) y, en paralelo con la segunda, una de 2014‑2026 (~1 h 30 min) para confirmar que nada cambió.
+
+| Etapa | Tiempo aprox. |
+|---|---|
+| Revisar títulos, columnas y bloques en 4 muestras (2006‑01, 2008‑12, 2011‑06, 2013‑12) y agregar las primeras variantes | 25 min |
+| Corrida 1 de 2006‑2013 (96 meses, ~30 s por mes) | 45 min |
+| Correcciones con los errores de la corrida 1 | 20 min |
+| Corrida 2 de 2006‑2013 y corrida de control de 2014‑2026, en paralelo | 1 h 30 min |
+| 2012‑04 (tabla de 13 meses), validación, gráficas, página, README | 15 min |
+
+**Corridas:**
+
+| # | Alcance | Resultado | Qué se corrigió después |
+|---|---|---|---|
+| 0 | 4 muestras | sin tablas en 2006‑01; 24 columnas en la tabla por entidad; sumas por centro que no cuadran | "Enero **de** 2006"; recorte del nombre repetido a la derecha (`page.crop`) y del lugar por tamaño a la izquierda; "Colonia Penal" como centro federal; notas al pie pegadas al estado ("CHIAPAS**", "PUEBLA (3)"); tabla de 13 meses "…e incremento mensual" y celdas "######" |
+| 1 | 2006‑2013 | 11 meses con error de extracción y 6 con falla en `centros_vs_entidad`; `entidades_vs_nacional` y `nacional_vs_13m` ya limpios | 2007: tabla partida en dos hojas (variante de 21 columnas; se descarta la hoja sin cifras) y página que no empieza en (0, 0); 2010: título sin mes y notas al pie numéricas ("AGUASCALIENTES 2", "4 2 GUANAJUATO"); 2008: "SAN LUIS POTO*S*Í"; 2012‑04: páginas de 2,263 pt; 2010‑10: página de centros federales a otra escala (columnas por página); 2006‑06: Tlaxcala después de Islas Marías |
+| 2 | 2006‑2013 | 1 error (2012‑04 sin tabla de 13 meses: "ABRIL - 2011 ABRIL - 2012") y 2 meses con falla | se repitió solo 2012‑04 |
+| 2b | 2014‑2026 | **idéntico byte a byte** a lo publicado (`poblacion`, `capacidad`, `nacional_13m`, `impresos`, `errores`) | — |
+
+**Resultado final** (`data/processed/reporte_validacion.md`, 2006‑01 a 2026‑08):
+
+| chequeo | meses ok | meses con falla |
+|---|---|---|
+| suma_sexo | 245 | 0 |
+| entidades_vs_nacional | 245 | 0 |
+| centros_vs_entidad | 243 | 2 (2012‑05, 2012‑06: defecto del PDF, ver abajo) |
+| nacional_vs_13m | 245 | 0 |
+| pdf_vs_csv (celda a celda, entidad y centro) | 12 | 0 |
+| extraccion | — | 3 (2019‑06, 2019‑07, 2019‑08: PDFs de 1–2 páginas) |
+
+**Hallazgos:**
+
+- **Nayarit, may–jun 2012: el PDF no cuadra consigo mismo.** En la tabla por centro, el renglón del estado dice 1,237 (mayo) y 1,202 (junio) procesados del fuero común, igual que la tabla por entidad, pero la suma de sus propios centros da 1,226 y 1,188 (11 y 14 menos). Los subtotales impresos de cada centro sí cuadran con sus H y M. Se deja como falla reportada.
+- **`entidades_vs_nacional` "no verificable" en sep–dic 2008:** el subtotal de sentenciados del renglón TOTAL viene como "######". El total nacional se confirma con la tabla de 13 meses (`nacional_vs_13m` limpio).
+- **Revisiones retroactivas de 2011:** el cuaderno de abr‑2012 corrige abr‑2011 por ±2 personas, y los de may‑2012 en adelante corrigen oct‑2011 (59 procesados del fuero común) y nov‑2011 (±1). El resto de 2006‑2013 coincide.
+- **Sobrepoblación:** la tabla por centro de 2006‑2013 no tiene renglón de grupo para los centros federales (como 2017‑2019), así que la capacidad a nivel "entidad" de los centros federales no existe en esos años; a nivel centro sí.
+- **Corrección de paso en `FEDERAL`:** el patrón tenía un carácter de control (retroceso) en lugar de `` tras `CPS`. Se corrigió; 2014‑2026 no cambia.
+- **Tamaño:** `poblacion.csv` pasa de 49 a 86 MB e `impresos.csv` de 40 a 69 MB. GitHub avisa arriba de 50 MB y rechaza arriba de 100 MB, así que la fase 5 (2000‑2005) ya no cabe sin comprimir o partir esos archivos.
 
 ---
 
