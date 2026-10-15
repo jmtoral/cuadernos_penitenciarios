@@ -271,7 +271,7 @@ const FUENTE = { e: "tabla por entidad", t: "tabla de 13 meses", o: "tabla de 13
 const MESES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 const MESES_L = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"];
 const SEXENIOS = [["Zedillo","1994-12","2000-11"],["Fox","2000-12","2006-11"],["Calderón","2006-12","2012-11"],["Peña Nieto","2012-12","2018-11"],["López Obrador","2018-12","2024-09"],["Sheinbaum","2024-10","2030-09"]];
-const SPA = "2016-06"; // sistema penal acusatorio en todo el país: hito destacado en rojo
+const ROJOS = ["2016-06", "2024-12"]; // hitos destacados en rojo: sistema penal acusatorio y ampliación de la prisión preventiva oficiosa de 2024
 // [mes, título, detalle, fuente]; "I" = hito tomado de la línea del tiempo de Intersecta (Con juicio o prejuicio, 2022)
 const HITOS = [
   ["2008-06","Reforma penal: sistema acusatorio y presunción de inocencia","DOF 18/06/2008. La palabra «oficiosamente» entra a la Constitución.","I"],
@@ -316,7 +316,7 @@ document.getElementById("cifras").innerHTML = cifras.map(([k, v, s, up]) =>
 
 // hitos (numerados en orden cronológico; el número es la marca en la gráfica)
 document.getElementById("hitos").innerHTML = HITOS.map(([p, t, s, f], k) =>
-  `<li><b${p === SPA ? ' class="spa"' : ""}>${k + 1}</b><span><strong>${t}</strong>${corto(p)} · ${s}</span></li>`).join("");
+  `<li><b${ROJOS.includes(p) ? ' class="spa"' : ""}>${k + 1}</b><span><strong>${t}</strong>${corto(p)} · ${s}</span></li>`).join("");
 
 // tabla
 document.querySelector("#tabla tbody").innerHTML = S.slice().reverse().map(d =>
@@ -418,7 +418,7 @@ function dibujar() {
   // hitos
   HITOS.forEach(([p], k) => {  // p: mes del hito
     const xi = x(idx(p));
-    const rojo = p === SPA;
+    const rojo = ROJOS.includes(p);
     el("line", { x1: xi, x2: xi, y1: m.t, y2: H - m.b, stroke: c(rojo ? "--signal" : "--ink-3"), "stroke-width": rojo ? 1.4 : .8, "stroke-dasharray": rojo ? "none" : "2 3" }, svg);
     el("circle", { cx: xi, cy: m.t - 6, r: 8, fill: c(rojo ? "--signal" : "--ink-2") }, svg);
     const t = el("text", { x: xi, y: m.t - 2.5, "text-anchor": "middle", class: "hito-n" }, svg);
