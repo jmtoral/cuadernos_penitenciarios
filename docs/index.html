@@ -63,6 +63,8 @@ h1 .n { color: var(--signal); font-variant-numeric: tabular-nums; }
 .modo button[aria-pressed="true"] { background: var(--panel); color: var(--ink); box-shadow: 0 1px 2px rgba(0,0,0,.12); }
 .modo button:focus-visible { outline: 2px solid var(--line); outline-offset: 1px; }
 .leyenda i.m { border-top-color: var(--signal); }
+.leyenda i.a.hz { background: var(--line); opacity: .55; }
+.leyenda i.a.mz { background: var(--signal); }
 .leyenda i.h { border-top-color: var(--line); }
 .leyenda i.m.d, .leyenda i.h.d { border-top-style: dashed; }
 .leyenda i.zs { height: 10px; width: 14px; border: 0; background: var(--zona-sent); }
@@ -186,6 +188,7 @@ a { color: var(--line); }
     <div class="lamina-top">
       <h2 id="t-sexo">Mujeres y hombres sin sentencia</h2>
       <div class="modo" role="group" aria-label="Vista por sexo">
+        <button type="button" id="sx-tot" data-sx="tot" aria-pressed="false">Totales</button>
         <button type="button" id="sx-pct" data-sx="pct" aria-pressed="true">% sin sentencia</button>
         <button type="button" id="sx-muj" data-sx="muj" aria-pressed="false">Mujeres</button>
         <button type="button" id="sx-idx" data-sx="idx" aria-pressed="false">Crecimiento</button>
@@ -689,6 +692,7 @@ const X = SEXO.map(([p, hp, ht, mp, mt]) => ({ p, i: idx(p), hp, ht, mp, mt, hs:
 const xl = X[X.length - 1], xbase = X.find(d => d.p === "2018-12");
 let sxModo = "pct";
 const LEY_SX = {
+  tot: `<span><i class="a hz"></i>hombres sin sentencia</span><span><i class="a mz"></i>mujeres sin sentencia</span><span>áreas apiladas: la suma es el total sin sentencia</span>`,
   pct: `<span><i class="m"></i>mujeres: % sin sentencia</span><span><i class="h"></i>hombres: % sin sentencia</span>`,
   muj: `<span><i class="m"></i>mujeres procesadas (sin sentencia)</span><span><i class="m d"></i>mujeres sentenciadas</span>`,
   idx: `<span><i class="m"></i>mujeres procesadas</span><span><i class="h"></i>hombres procesados</span><span>índice: diciembre de 2018 = 100</span>`
@@ -713,13 +717,15 @@ function dibujar3() {
   const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, width: W, height: H }, box3);
   const i0 = X[0].i, i1 = xl.i;
   const x = i => m.l + (i - i0) / (i1 - i0) * (W - m.l - m.r);
-  const series = sxModo === "pct" ? [[pctM, "--signal", false], [pctH, "--line", false]]
+  const TOT = sxModo === "tot";
+  const series = TOT ? [[d => d.mp, "--signal", false], [d => d.mp + d.hp, "--line", false]]
+    : sxModo === "pct" ? [[pctM, "--signal", false], [pctH, "--line", false]]
     : sxModo === "muj" ? [[d => d.mp, "--signal", false], [d => d.ms, "--signal", true]]
     : [[d => d.mp / xbase.mp * 100, "--signal", false], [d => d.hp / xbase.hp * 100, "--line", false]];
   const vals = X.flatMap(d => series.map(([f]) => f(d)));
-  const paso = sxModo === "muj" ? 2000 : sxModo === "pct" ? 10 : 20;
+  const paso = TOT ? 20000 : sxModo === "muj" ? 2000 : sxModo === "pct" ? 10 : 20;
   const yMin = sxModo === "idx" ? Math.floor(Math.min(...vals) / paso) * paso : 0;
-  const yMax = Math.ceil(Math.max(...vals) / paso) * paso + (sxModo === "pct" ? 0 : paso);
+  const yMax = Math.ceil(Math.max(...vals) / paso) * paso + (sxModo === "pct" || TOT ? 0 : paso);
   const y = v => m.t + (1 - (v - yMin) / (yMax - yMin)) * (H - m.t - m.b);
   const css = getComputedStyle(document.documentElement), c = n => css.getPropertyValue(n).trim();
   SEXENIOS.forEach(([n, a, b], k) => {
@@ -732,7 +738,7 @@ function dibujar3() {
   for (let v = yMin; v <= yMax; v += paso) {
     el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: c("--rule"), "stroke-width": v === yMin ? 1 : .6 }, svg);
     const t = el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg);
-    t.textContent = sxModo === "pct" ? v + " %" : sxModo === "muj" ? fmt(v) : String(v);
+    t.textContent = sxModo === "pct" ? v + " %" : TOT ? (v === 0 ? "0" : v / 1000 + " mil") : sxModo === "muj" ? fmt(v) : String(v);
   }
   if (sxModo === "idx") {
     el("line", { x1: m.l, x2: W - m.r, y1: y(100), y2: y(100), stroke: c("--ink-3"), "stroke-width": 1, "stroke-dasharray": "4 3" }, svg);
@@ -749,14 +755,20 @@ function dibujar3() {
   hueco(svg, x, m, H, c, estrecho);
   const tramos = [];
   X.forEach((d, k) => { if (!k || d.i !== X[k - 1].i + 1) tramos.push([]); tramos[tramos.length - 1].push(d); });
-  series.forEach(([f, col, pun]) => tramos.forEach(tr => el("path", { d: tr.map((d, k) => `${k ? "L" : "M"}${x(d.i)},${y(f(d))}`).join(" "),
+  if (TOT) tramos.forEach(tr => {  // áreas apiladas: mujeres abajo, hombres encima
+    const area = (lo, hi, col, op) => el("path", { d: tr.map((d, k) => `${k ? "L" : "M"}${x(d.i)},${y(hi(d))}`).join(" ") + " " +
+      tr.slice().reverse().map(d => `L${x(d.i)},${y(lo(d))}`).join(" ") + " Z", fill: c(col), opacity: op }, svg);
+    area(() => 0, d => d.mp, "--signal", .85);
+    area(d => d.mp, d => d.mp + d.hp, "--line", .45);
+  });
+  if (!TOT) series.forEach(([f, col, pun]) => tramos.forEach(tr => el("path", { d: tr.map((d, k) => `${k ? "L" : "M"}${x(d.i)},${y(f(d))}`).join(" "),
     fill: "none", stroke: c(col), "stroke-width": 2.2, "stroke-linejoin": "round", "stroke-dasharray": pun ? "5 4" : "none" }, svg)));
   series.forEach(([f, col]) => {
     const v = f(xl);
     el("circle", { cx: x(xl.i), cy: y(v), r: 4.5, fill: c(col), stroke: c("--panel"), "stroke-width": 2 }, svg);
     if (!estrecho) {
       const t = el("text", { x: x(xl.i) + 9, y: y(v) + 4, style: `fill:${c("--ink")};font-size:12px` }, svg);
-      t.textContent = sxModo === "pct" ? v.toFixed(1) + " %" : sxModo === "muj" ? fmt(v) : v.toFixed(0);
+      t.textContent = TOT ? (v === xl.mp ? `${fmt(v)} mujeres` : `${fmt(v)} en total`) : sxModo === "pct" ? v.toFixed(1) + " %" : sxModo === "muj" ? fmt(v) : v.toFixed(0);
     }
   });
   const cruz = el("line", { y1: m.t, y2: H - m.b, stroke: c("--ink"), "stroke-width": 1, opacity: 0 }, svg);
@@ -771,7 +783,7 @@ function dibujar3() {
     const cx = x(d.i);
     cruz.setAttribute("x1", cx); cruz.setAttribute("x2", cx); cruz.setAttribute("opacity", .35);
     tip.innerHTML = `<div class="m">${nombre(d.p)}</div>
-      <dl><dt>Mujeres sin sentencia</dt><dd>${fmt(d.mp)} · ${pctM(d).toFixed(1)} %</dd>
+      <dl><dt>Total sin sentencia</dt><dd>${fmt(d.mp + d.hp)}</dd><dt>Mujeres sin sentencia</dt><dd>${fmt(d.mp)} · ${pctM(d).toFixed(1)} %</dd>
       <dt>Hombres sin sentencia</dt><dd>${fmt(d.hp)} · ${pctH(d).toFixed(1)} %</dd>
       <dt>Mujeres sentenciadas</dt><dd>${fmt(d.ms)}</dd>
       <dt>Por 100 mil mujeres 15+</dt><dd>${(d.mp / pobSexo(d.i, 1) * 1e5).toFixed(1)}</dd>
