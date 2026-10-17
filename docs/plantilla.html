@@ -191,6 +191,7 @@ a { color: var(--line); }
         <button type="button" id="sx-tot" data-sx="tot" aria-pressed="false">Totales</button>
         <button type="button" id="sx-pct" data-sx="pct" aria-pressed="true">% sin sentencia</button>
         <button type="button" id="sx-muj" data-sx="muj" aria-pressed="false">Mujeres</button>
+        <button type="button" id="sx-hom" data-sx="hom" aria-pressed="false">Hombres</button>
         <button type="button" id="sx-var" data-sx="var" aria-pressed="false">Variación anual</button>
       </div>
     </div>
@@ -695,6 +696,7 @@ const LEY_SX = {
   tot: `<span><i class="a hz"></i>hombres sin sentencia</span><span><i class="a mz"></i>mujeres sin sentencia</span><span>áreas apiladas: la suma es el total sin sentencia</span>`,
   pct: `<span><i class="m"></i>mujeres: % sin sentencia</span><span><i class="h"></i>hombres: % sin sentencia</span>`,
   muj: `<span><i class="m"></i>mujeres procesadas (sin sentencia)</span><span><i class="m d"></i>mujeres sentenciadas</span>`,
+  hom: `<span><i class="h"></i>hombres procesados (sin sentencia)</span><span><i class="h d"></i>hombres sentenciados</span>`,
   var: `<span><i class="sube"></i>más personas sin sentencia que un año antes</span><span><i class="baja"></i>menos que un año antes</span><span>arriba mujeres, abajo hombres; misma escala</span>`
 };
 const pctM = d => d.mp / d.mt * 100, pctH = d => d.hp / d.ht * 100;
@@ -792,9 +794,10 @@ function dibujar3() {
   const series = TOT ? [[d => d.mp, "--signal", false], [d => d.mp + d.hp, "--line", false]]
     : sxModo === "pct" ? [[pctM, "--signal", false], [pctH, "--line", false]]
     : sxModo === "muj" ? [[d => d.mp, "--signal", false], [d => d.ms, "--signal", true]]
+    : sxModo === "hom" ? [[d => d.hp, "--line", false], [d => d.hs, "--line", true]]
     : [];
   const vals = X.flatMap(d => series.map(([f]) => f(d)));
-  const paso = TOT ? 20000 : sxModo === "muj" ? 2000 : sxModo === "pct" ? 10 : 20;
+  const paso = TOT || sxModo === "hom" ? 20000 : sxModo === "muj" ? 2000 : sxModo === "pct" ? 10 : 20;
   const yMin = 0;
   const yMax = Math.ceil(Math.max(...vals) / paso) * paso + (sxModo === "pct" || TOT ? 0 : paso);
   const y = v => m.t + (1 - (v - yMin) / (yMax - yMin)) * (H - m.t - m.b);
@@ -810,7 +813,7 @@ function dibujar3() {
   for (let v = yMin; v <= yMax; v += paso) {
     el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: c("--rule"), "stroke-width": v === yMin ? 1 : .6 }, svg);
     const t = el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg);
-    t.textContent = sxModo === "pct" ? v + " %" : TOT ? (v === 0 ? "0" : v / 1000 + " mil") : sxModo === "muj" ? fmt(v) : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v) + " %";
+    t.textContent = sxModo === "pct" ? v + " %" : TOT || sxModo === "hom" ? (v === 0 ? "0" : v / 1000 + " mil") : sxModo === "muj" ? fmt(v) : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v) + " %";
   }
   const A0x = Number(X[0].p.slice(0, 4)), A1x = Number(xl.p.slice(0, 4));
   for (let a = A0x; a <= A1x; a++) {
@@ -836,7 +839,7 @@ function dibujar3() {
     el("circle", { cx: x(xl.i), cy: y(v), r: 4.5, fill: c(col), stroke: c("--panel"), "stroke-width": 2 }, svg);
     if (!estrecho) {
       const t = el("text", { x: x(xl.i) + 9, y: y(v) + (TOT && v === xl.mp ? -10 : 4), style: `fill:${c("--ink")};font-size:12px` }, svg);
-      t.textContent = TOT ? (v === xl.mp ? `${fmt(v)} mujeres` : `${fmt(v)} en total`) : sxModo === "pct" ? v.toFixed(1) + " %" : sxModo === "muj" ? fmt(v) : `${v > 0 ? "+" : "−"}${Math.abs(v).toFixed(0)} % ${v === series[0][0](xl) ? "mujeres" : "hombres"}`;
+      t.textContent = TOT ? (v === xl.mp ? `${fmt(v)} mujeres` : `${fmt(v)} en total`) : sxModo === "pct" ? v.toFixed(1) + " %" : sxModo === "muj" || sxModo === "hom" ? fmt(v) : `${v > 0 ? "+" : "−"}${Math.abs(v).toFixed(0)} % ${v === series[0][0](xl) ? "mujeres" : "hombres"}`;
     }
   });
   const cruz = el("line", { y1: m.t, y2: H - m.b, stroke: c("--ink"), "stroke-width": 1, opacity: 0 }, svg);
