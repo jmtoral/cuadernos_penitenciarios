@@ -191,7 +191,7 @@ a { color: var(--line); }
         <button type="button" id="sx-tot" data-sx="tot" aria-pressed="false">Totales</button>
         <button type="button" id="sx-pct" data-sx="pct" aria-pressed="true">% sin sentencia</button>
         <button type="button" id="sx-muj" data-sx="muj" aria-pressed="false">Mujeres</button>
-        <button type="button" id="sx-idx" data-sx="idx" aria-pressed="false">Cambio desde 2018</button>
+        <button type="button" id="sx-var" data-sx="var" aria-pressed="false">Variación anual</button>
       </div>
     </div>
     <div class="lamina-top">
@@ -695,7 +695,7 @@ const LEY_SX = {
   tot: `<span><i class="a hz"></i>hombres sin sentencia</span><span><i class="a mz"></i>mujeres sin sentencia</span><span>áreas apiladas: la suma es el total sin sentencia</span>`,
   pct: `<span><i class="m"></i>mujeres: % sin sentencia</span><span><i class="h"></i>hombres: % sin sentencia</span>`,
   muj: `<span><i class="m"></i>mujeres procesadas (sin sentencia)</span><span><i class="m d"></i>mujeres sentenciadas</span>`,
-  idx: `<span><i class="m"></i>mujeres sin sentencia</span><span><i class="h"></i>hombres sin sentencia</span><span>cuánto aumentaron desde diciembre de 2018, inicio del sexenio de López Obrador (0 % = sin cambio)</span>`
+  var: `<span><i class="sube"></i>más personas sin sentencia que un año antes</span><span><i class="baja"></i>menos que un año antes</span><span>arriba mujeres, abajo hombres; misma escala</span>`
 };
 const pctM = d => d.mp / d.mt * 100, pctH = d => d.hp / d.ht * 100;
 document.getElementById("nota-sexo").innerHTML =
@@ -708,6 +708,77 @@ document.querySelectorAll("[data-sx]").forEach(b => b.addEventListener("click", 
   dibujar3();
 }));
 const box3 = document.getElementById("graf3");
+// variación anual por sexo: la gráfica se parte en dos mitades (mujeres arriba, hombres abajo) con la misma escala
+function variacionSexo(svg, W, estrecho, m, x, i0, i1, c) {
+  const H = estrecho ? 400 : 480;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("height", H);
+  const porI = Object.fromEntries(X.map(d => [d.i, d]));
+  const V = X.map(d => { const a = porI[d.i - 12]; return a && { d, a, m: (d.mp / a.mp - 1) * 100, h: (d.hp / a.hp - 1) * 100 }; }).filter(Boolean);
+  const lim = Math.ceil(Math.max(...V.flatMap(v => [Math.abs(v.m), Math.abs(v.h)])) / 10) * 10;
+  const mid = (m.t + H - m.b) / 2, hh = (H - m.t - m.b) / 2 - 10;
+  const mitades = [["Mujeres", "m", m.t], ["Hombres", "h", mid + 10]];
+  const yv = (top, v) => top + hh / 2 - v / lim * hh / 2;
+  SEXENIOS.forEach(([n, a, b], k) => {
+    const xa = x(Math.max(idx(a), i0)), xb = x(Math.min(idx(b) + 1, i1));
+    if (xb <= xa) return;
+    if (k % 2 === 1) el("rect", { x: xa, y: m.t, width: xb - xa, height: H - m.t - m.b, fill: c("--band") }, svg);
+    const t = el("text", { x: (xa + xb) / 2, y: m.t - 12, "text-anchor": "middle", class: "sx" }, svg);
+    t.textContent = estrecho && n === "López Obrador" ? "AMLO" : n;
+  });
+  hueco(svg, x, m, H, c, estrecho);
+  const ancho = Math.max(1.5, (x(i0 + 1) - x(i0)) * .72);
+  mitades.forEach(([nom, k, top]) => {
+    [lim, lim / 2, 0, -lim / 2, -lim].forEach(v => {
+      el("line", { x1: m.l, x2: W - m.r, y1: yv(top, v), y2: yv(top, v), stroke: v === 0 ? c("--ink-3") : c("--rule"), "stroke-width": v === 0 ? 1 : .6 }, svg);
+      const t = el("text", { x: m.l - 8, y: yv(top, v) + 4, "text-anchor": "end" }, svg);
+      t.textContent = v === 0 ? "0" : (v > 0 ? "+" : "−") + Math.abs(v) + " %";
+    });
+    const tn = el("text", { x: m.l + 6, y: top + 14, style: `fill:${c("--ink")};font-size:12.5px;font-weight:700` }, svg);
+    tn.textContent = nom;
+    V.forEach(v => el("rect", { x: x(v.d.i) - ancho / 2, y: Math.min(yv(top, 0), yv(top, v[k])), width: ancho,
+      height: Math.max(.5, Math.abs(yv(top, v[k]) - yv(top, 0))), fill: v[k] > 0 ? c("--signal") : c("--line") }, svg));
+    const u = V[V.length - 1];
+    if (!estrecho) {
+      const tl = el("text", { x: x(u.d.i) + 8, y: yv(top, u[k]) + 4, style: `fill:${c("--ink")};font-size:12px` }, svg);
+      tl.textContent = (u[k] > 0 ? "+" : "−") + Math.abs(u[k]).toFixed(1) + " %";
+    }
+  });
+  el("line", { x1: m.l, x2: W - m.r, y1: mid, y2: mid, stroke: c("--ink-2"), "stroke-width": 1.2 }, svg);
+  const A0x = Number(X[0].p.slice(0, 4)), A1x = Number(xl.p.slice(0, 4));
+  for (let a = A0x; a <= A1x; a++) {
+    if ((a - A0x) % [1, 2, 5, 10].find(s => (A1x - A0x) / s * 42 < W - m.l - m.r)) continue;
+    const xi = x(idx(`${a}-01`));
+    el("line", { x1: xi, x2: xi, y1: H - m.b, y2: H - m.b + 5, stroke: c("--ink-3") }, svg);
+    const t = el("text", { x: xi, y: H - m.b + 19, "text-anchor": "middle" }, svg);
+    t.textContent = a;
+  }
+  const cruz = el("line", { y1: m.t, y2: H - m.b, stroke: c("--ink"), "stroke-width": 1, opacity: 0 }, svg);
+  const hit = el("rect", { x: m.l, y: 0, width: W - m.l - m.r, height: H, fill: "transparent" }, svg);
+  const tip = document.createElement("div"); tip.id = "tip3"; tip.hidden = true; box3.appendChild(tip);
+  const porV = Object.fromEntries(V.map(v => [v.d.i, v]));
+  const salir = () => { tip.hidden = true; cruz.setAttribute("opacity", 0); };
+  const mover = ev => {
+    const r = svg.getBoundingClientRect();
+    const sx = ((ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left) * W / r.width;
+    const v = porV[Math.round(i0 + (sx - m.l) / (W - m.l - m.r) * (i1 - i0))];
+    if (!v) { salir(); return; }
+    const cx = x(v.d.i);
+    cruz.setAttribute("x1", cx); cruz.setAttribute("x2", cx); cruz.setAttribute("opacity", .35);
+    tip.innerHTML = `<div class="m">${nombre(v.d.p)}</div><div class="f">contra ${nombre(v.a.p)}</div>
+      <dl><dt>Mujeres sin sentencia</dt><dd>${pctFmt(v.m)}</dd><dt></dt><dd>${fmt(v.a.mp)} → ${fmt(v.d.mp)}</dd>
+      <dt>Hombres sin sentencia</dt><dd>${pctFmt(v.h)}</dd><dt></dt><dd>${fmt(v.a.hp)} → ${fmt(v.d.hp)}</dd></dl>`;
+    tip.hidden = false;
+    const s = r.width / W, tw = tip.offsetWidth, th = tip.offsetHeight;
+    let left = cx * s + 14; if (left + tw > r.width) left = cx * s - tw - 14;
+    tip.style.left = Math.max(0, left) + "px"; tip.style.top = Math.max(0, (mid * s) - th / 2) + "px";
+  };
+  hit.addEventListener("mousemove", mover);
+  hit.addEventListener("touchstart", mover, { passive: true });
+  hit.addEventListener("touchmove", mover, { passive: true });
+  hit.addEventListener("mouseleave", salir);
+  ocultar.g3 = salir;
+}
+
 function dibujar3() {
   box3.innerHTML = "";
   document.getElementById("ley-sx").innerHTML = LEY_SX[sxModo];
@@ -721,13 +792,14 @@ function dibujar3() {
   const series = TOT ? [[d => d.mp, "--signal", false], [d => d.mp + d.hp, "--line", false]]
     : sxModo === "pct" ? [[pctM, "--signal", false], [pctH, "--line", false]]
     : sxModo === "muj" ? [[d => d.mp, "--signal", false], [d => d.ms, "--signal", true]]
-    : [[d => (d.mp / xbase.mp - 1) * 100, "--signal", false], [d => (d.hp / xbase.hp - 1) * 100, "--line", false]];
+    : [];
   const vals = X.flatMap(d => series.map(([f]) => f(d)));
   const paso = TOT ? 20000 : sxModo === "muj" ? 2000 : sxModo === "pct" ? 10 : 20;
-  const yMin = sxModo === "idx" ? Math.floor(Math.min(...vals) / paso) * paso : 0;
+  const yMin = 0;
   const yMax = Math.ceil(Math.max(...vals) / paso) * paso + (sxModo === "pct" || TOT ? 0 : paso);
   const y = v => m.t + (1 - (v - yMin) / (yMax - yMin)) * (H - m.t - m.b);
   const css = getComputedStyle(document.documentElement), c = n => css.getPropertyValue(n).trim();
+  if (sxModo === "var") return variacionSexo(svg, W, estrecho, m, x, i0, i1, c);
   SEXENIOS.forEach(([n, a, b], k) => {
     const xa = x(Math.max(idx(a), i0)), xb = x(Math.min(idx(b) + 1, i1));
     if (xb <= xa) return;
@@ -739,10 +811,6 @@ function dibujar3() {
     el("line", { x1: m.l, x2: W - m.r, y1: y(v), y2: y(v), stroke: c("--rule"), "stroke-width": v === yMin ? 1 : .6 }, svg);
     const t = el("text", { x: m.l - 8, y: y(v) + 4, "text-anchor": "end" }, svg);
     t.textContent = sxModo === "pct" ? v + " %" : TOT ? (v === 0 ? "0" : v / 1000 + " mil") : sxModo === "muj" ? fmt(v) : (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v) + " %";
-  }
-  if (sxModo === "idx") {
-    el("line", { x1: m.l, x2: W - m.r, y1: y(0), y2: y(0), stroke: c("--ink-3"), "stroke-width": 1, "stroke-dasharray": "4 3" }, svg);
-    el("line", { x1: x(xbase.i), x2: x(xbase.i), y1: m.t, y2: H - m.b, stroke: c("--ink-3"), "stroke-width": .8, "stroke-dasharray": "2 3" }, svg);
   }
   const A0x = Number(X[0].p.slice(0, 4)), A1x = Number(xl.p.slice(0, 4));
   for (let a = A0x; a <= A1x; a++) {
